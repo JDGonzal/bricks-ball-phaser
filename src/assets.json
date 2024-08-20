@@ -1,0 +1,83 @@
+{
+  "bricks": {
+    "scale": 0.2,
+    "assets": [
+      { "key": "brick-blue" },
+      { "key": "brick-blue-damage" },
+      { "key": "brick-green" },
+      { "key": "brick-green-damage" },
+      { "key": "brick-purple" },
+      { "key": "brick-purple-damage" },
+      { "key": "brick-red" },
+      { "key": "brick-red-damage" },
+      { "key": "brick-orange" },
+      { "key": "brick-orange-damage" },
+      { "key": "brick-light-blue" },
+      { "key": "brick-light-blue" },
+      { "key": "brick-yellow" },
+      { "key": "brick-yellow-damage" },
+      { "key": "brick-dark-green" },
+      { "key": "brick-dark-green-damage" },
+      { "key": "brick-gray" },
+      { "key": "brick-gray-damage" },
+      { "key": "brick-brown" },
+      { "key": "brick-brown-damage" }
+    ]
+  },
+  "boxes": {
+    "scale": 0.2,
+    "assets": [
+      { "key": "box-blue" },
+      { "key": "box-green" },
+      { "key": "box-purple" },
+      { "key": "box-red" },
+      { "key": "box-orange" },
+      { "key": "box-yellow" },
+      { "key": "box-light-blue" },
+      { "key": "box-dark-green" },
+      { "key": "box-gray" },
+      { "key": "box-brown" }
+    ]
+  },
+  "platforms": {
+    "scale": 0.2,
+    "assets": [
+      { "key": "platform-50" },
+      { "key": "platform-100a" },
+      { "key": "platform-100b" },
+      { "key": "platform-100c" },
+      { "key": "platform-100d" },
+      { "key": "platform-100e" },
+      { "key": "platform-100f" },
+      { "key": "platform-100" },
+      { "key": "platform-250" },
+      { "key": "platform-500" },
+      { "key": "platform-Slow" },
+      { "key": "platform-Fast" },
+      { "key": "platform-3balls" },
+      { "key": "platform-fire" },
+      { "key": "platform-ice" },
+      { "key": "platform-in-arrow" },
+      { "key": "platform-out-arrow" },
+      { "key": "platform-red-yellow" },
+      { "key": "platform-normal" },
+      { "key": "platform-electric1" },
+      { "key": "platform-electric2" },
+      { "key": "platform-electric3" },
+      { "key": "platform-electric-shot1" },
+      { "key": "platform-electric-shot2" },
+      { "key": "platform-electric-shot3" },
+      { "key": "platform-electric-long" },
+      { "key": "platform-electric-short" }
+    ]
+  },
+  "symbols": {
+    "scale": 0.2,
+    "assets": [
+      { "key": "ball" },
+      { "key": "star" },
+      { "key": "heart" },
+      { "key": "shot" }
+    ]
+  }
+}
