@@ -1,6 +1,6 @@
 # BRICKS BALL PHASER
 Basado en este video:  
-[![Construye tu primer juego con Phaser](images/2024-08-19_052741.png "Construye tu primer juego con Phaser")](https://www.youtube.com/watch?v=0qtg-9M3peI)
+[![Construye tu primer juego con Phaser](images/2024-08-19_052741.png "Construye tu primer juego con Phaser")](https://www.youtube.com/watch?v=8YUXg3nKSN4&list=PLIcuwIrm4rKeWg-592IgvbnAVoac-nmZJ)
 >[!IMPORTANT] 
 > * El código original está en este repositorio: 
 >[ball-game-phaser
@@ -328,9 +328,12 @@ visible, en el `create` de **game.js**:
 ```js
     this.gameover.visible = false;
 ```
-16. Creamos la variable en el `constructor`
+
+## 03. La Plataforma, la Bola y sus físicas
+
+1. Creamos la variable en el `constructor`
 de **game.js**, para la `platform`.
-17. Ya tenemos precargada varias plataformas, 
+2. Ya tenemos precargada varias plataformas, 
 para el ejercicio vamos a usar
 `platform-normal` y lo mostramos en `create`
 de **game.js**, con `physics`:
@@ -339,18 +342,18 @@ de **game.js**, con `physics`:
       this.physics.add.image(400, 460, 'platform-normal')
         .setScale(assetsJson.platforms.scale);
 ```
-18. Como la `platform` cae le decimos que no
+3. Como la `platform` cae le decimos que no
 va a tener gravedad:
 ```js
     this.platform.body.allowGravity = false;
 ```
-19. Definimos un elemento para el manejo de 
+4. Definimos un elemento para el manejo de 
 las teclas primero en el `constructor` de
 **game.js** y luego en el `create`:
 ```js
     this.cursor = this.input.keyboard.createCursorKeys();
 ```
-20. En el método `update` de **game.js**,
+5. En el método `update` de **game.js**,
 definimos cuando se pulse una tecla y la 
 acción:
 ```js
@@ -360,7 +363,8 @@ acción:
       this.platform.setVelocityX(500);
     } else this.platform.setVelocityX(0);
 ```
-21. Ya la `ball` está precargada, solo
+
+6. Ya la `ball` está precargada, solo
 la definimos en `constructor` y la ponemos 
 en pantalla en el `create` de **game.js**, y
 la pongo antes de crear la `platform`:
@@ -369,19 +373,50 @@ la pongo antes de crear la `platform`:
       this.physics.add.image(400, 100, 'ball')
         .setScale(assetsJson.symbols.scale);
 ```
-22. Como la `ball` se sigue derecho, provocamos
+7. Como la `ball` se sigue derecho, provocamos
 una colisión, después de 
 `this.platform.body.allowGravity = false;` :
 ```js
 this.physics.add.collider(this.ball, this.platform);
 ```
-23. Vamos aprovocar el rebote de la `ball` apenas
-haga una colisión:
+8. Vamos aprovocar el rebote de la `ball` apenas
+haga una colisión, en ela función `create` de **game.js**:
 ```js
     this.ball.setBounce(1);
 ```
-24. Para evitar que la `platform` se hunda con la
-`ball`, añado a la `platform` un `setImmovable`:
+9. Para evitar que la `platform` se hunda con la
+`ball`, añado a la `platform` un `setImmovable` en el `create`:
 ```js
     this.platform.setImmovable();
+```
+10. Haremos que  la `ball` aparezca de forma aleatoria y lo hacemos 
+antes de la colisión entre la `ball` y la `platform`, en el método
+`create` de **game.js**:
+```js
+    let velocity = 100 * Phaser.Math.Between(1.3, 2);
+    if (Phaser.Math.Between(0, 10) > 5) {
+      velocity = 0 - velocity;
+    }
+    this.ball.setVelocity(velocity, 10);
+```
+11. Al principio del método `create` de **game.js**, definimos
+los límites del mundo o `world`:
+```js
+    this.physics.world.setBoundsCollision(true, true, true, false);
+```
+12. Adicional se debe decir al objeto `ball` que tiene colisión
+con el mundo, en el `create` de **game.js**, justo después de 
+crear la `ball`:
+```js
+     this.ball.setCollideWorldBounds(true);
+```
+13. En el método `update` de **game.js**, al final si la `ball`
+sale del juego, se avisa que el juego se ha terminado y se pausa
+la `scene`:
+```js
+    if (this.ball.y >= 500) {
+      console.log('GamoeOver');
+      this.gameover.visible = true;
+      this.scene.pause();
+    }
 ```

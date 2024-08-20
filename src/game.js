@@ -57,6 +57,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   create () {
+    /* Definimos los límites del `world` para que la `ball` 
+    pueda rebotar: ---------------------> izq., der., arr., aba. */
+    this.physics.world.setBoundsCollision(true, true, true, false);
     /* Ponemos las imágenes en el juego */
     this.background =
       this.add.image(0, 0, 'background')
@@ -82,12 +85,21 @@ export class GameScene extends Phaser.Scene {
     this.ball =
       this.physics.add.image(400, 100, 'ball')
         .setScale(assetsJson.symbols.scale);
+    /* Luego de crearla le decimos que se adapte a los límites 
+     del `world` */
+     this.ball.setCollideWorldBounds(true);
     // Mostramos la `platform-normal` con physics
     this.platform =
       this.physics.add.image(400, 460, 'platform-normal')
         .setScale(assetsJson.platforms.scale);
     // Como la plataforma cae le decimos q no va a tener gravedad
     this.platform.body.allowGravity = false;
+    // La velocidad(x,y) de la `ball` será aleatoria
+    let velocity = 100 * Phaser.Math.Between(1.3, 2);
+    if (Phaser.Math.Between(0, 10) > 5) {
+      velocity = 0 - velocity;
+    }
+    this.ball.setVelocity(velocity, 10);
     // Colisión entre la `platform` y la `ball`
     this.physics.add.collider(this.ball, this.platform);
     // Hacemos un rebote de la `ball`
@@ -107,5 +119,12 @@ export class GameScene extends Phaser.Scene {
     } else if (this.cursor.right.isDown) {
       this.platform.setVelocityX(500);
     } else this.platform.setVelocityX(0);
+
+    // Si la `ball` se sale del juego se da por terminado el juego
+    if (this.ball.y >= 500) {
+      console.log('GamoeOver');
+      this.gameover.visible = true;
+      this.scene.pause();
+    }
   }
 };
