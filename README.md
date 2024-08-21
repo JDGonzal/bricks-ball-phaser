@@ -470,3 +470,95 @@ el método `behaviorCollider` de **game.js**:
     this.scoreText.setText(`PUNTOS: ${this.score}`);
   }
 ```
+
+## 05. Refactorizar el código
+1. Creamos una carpeta llamada "components" dentro de "src", luego creamos el archivo de nombre: **Scoreboard.js**
+2. Creamos una clase de nombre `Scoreboard` dentro del nuevo
+archivo:
+```js
+export class Scoreboard {
+  constructor (game) {
+    this.game = game;
+    this.score = 0;
+  }
+}
+```
+3. El archivo **game.js** debe importar el componente
+`Scoreboard`:
+```js
+import { Scoreboard } from './components/Scoreboard';
+```
+4. En el método `init` de **game.js** debo instanciar este nuevo 
+componente:
+```js
+  init () {
+    this.scoreboard = new Scoreboard(this);
+  }
+```
+5. Movemos la creación del texto al nuevo componente 
+**Scoreboard.js**, en una función paralela de nombre `create`:
+```js
+  create () {
+    /* Ponemos el texto en pantalla para el `score` */
+    this.scoreText = this.game.add.text(16, 16, 'PUNTOS: 0', {
+      fontSize: '20px',
+      fill: 'white',
+      fontFamily: 'verdana, arial, sans-serif',
+    });
+  }
+```
+6. Invocamos en el `create` de **game.js** el create de 
+`Scoreboard`:
+```js
+    this.scoreboard.create();
+```
+7. En el Archivo **Scoreboard.js**, cramos un método para el 
+manejo de los puntos y el texto en pantalla del `score`:
+```js
+  AddPoints (points) {
+    this.score += points;
+    this.scoreText.setText(`PUNTOS: ${this.score}`);
+  }
+```
+8. En el archivo **game.js** en el método `behaviorCollider`
+hacemos el llamado de `AddPoints`
+
+9. Creo un archivo en la carpeta "components" con el nombre
+**jsonUtils.js**, con este código q muevo de **game.js**:
+```js
+let i = 0;
+
+/* Precarga basado en un json */
+export function preloadFromJson ({ load }, { assets }) {
+  assets.forEach(({ key }) => {
+    i++;
+    const path = './assets/json/' +
+    ('00' + i).slice(-2) +
+    '-Breakout-Tiles.png';
+    load.image(key, path);
+  });
+}
+
+/* Muestra basados en un json */
+// eslint-disable-next-line no-unused-vars
+export function createFromJson ({ add }, { assets, scale },
+  x = 0, y = 0) {
+  assets.forEach(({ key }) => {
+    if (x >= 800) {
+      x = 0;
+      y += 26;
+    }
+    add.image(x, y, key)
+      .setOrigin(0, 0)
+      .setScale(scale);
+    if (key.substring(0, 8) === 'platform') x += 100;
+    else x += 80;
+    i++;
+  });
+}
+```
+10. En el archivo **game.js**, hago la importación de este
+nuevo componente ``:
+```js
+import { preloadFromJson } from './components/jsonUtils.js';
+```
