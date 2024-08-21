@@ -1,37 +1,7 @@
 import Phaser from 'phaser';
 import assetsJson from './assets.json'; // assert { type: 'json' };
-
-let i = 0;
-let x = 0;
-let y = 0;
-
-/* Precarga basado en un json */
-function preloadFromJson ({ load }, { assets }) {
-  assets.forEach(({ key }) => {
-    i++;
-    const path = './assets/json/' +
-    ('00' + i).slice(-2) +
-    '-Breakout-Tiles.png';
-    load.image(key, path);
-  });
-}
-
-/* Muestra basados en un json */
-// eslint-disable-next-line no-unused-vars
-function createFromJson ({ add }, { assets, scale }) {
-  assets.forEach(({ key }) => {
-    if (x >= 800) {
-      x = 0;
-      y += 26;
-    }
-    add.image(x, y, key)
-      .setOrigin(0, 0)
-      .setScale(scale);
-    if (key.substring(0, 8) === 'platform') x += 100;
-    else x += 80;
-    i++;
-  });
-}
+import { Scoreboard } from './components/Scoreboard.js';
+import { preloadFromJson /*, createFromJson */ } from './components/jsonUtils.js';
 
 /* Se exporta la clase a usar de la Escena */
 export class GameScene extends Phaser.Scene {
@@ -43,12 +13,12 @@ export class GameScene extends Phaser.Scene {
     this.platform = null;
     this.cursor = null;
     this.ball = null;
-    this.scoreText = null;
+    this.scoreboard = null;
   }
 
   /* Valores que puedo inicializar */
   init () {
-    this.score = 0;
+    this.scoreboard = new Scoreboard(this);
   }
 
   preload () {
@@ -75,24 +45,17 @@ export class GameScene extends Phaser.Scene {
 
     // Si quiero ver en pantalla lo del json
     /*
-    i = this.scene.scene.add.displayList.list.length;
-    createFromJson(this, assetsJson.bricks);
-    x = 0; y += 26;
-    createFromJson(this, assetsJson.boxes);
-    x = 0; y += 26;
-    createFromJson(this, assetsJson.platforms);
-    x = 0; y += 26;
-    createFromJson(this, assetsJson.symbols);
-    */
+    let y = 0;
+    y = createFromJson(this, assetsJson.bricks, 0, y) + 26;
+    y = createFromJson(this, assetsJson.boxes, 0, y) + 26;
+    y = createFromJson(this, assetsJson.platforms, 0, y) + 26;
+    createFromJson(this, assetsJson.symbols, 0, y);
+    /* */
     // No visible el mensaje de `gameover`
     this.gameover.visible = false;
 
-    /* Ponemos el texto en pantalla para el `score` */
-    this.scoreText = this.add.text(16, 16, 'PUNTOS: 0', {
-      fontSize: '20px',
-      fill: 'white',
-      fontFamily: 'verdana, arial, sans-serif',
-    });
+    // Invomcamos el `create` del componente `Scoreboard`
+    this.scoreboard.create();
 
     // Ponemos la `ball` con las `physics`
     this.ball =
@@ -130,8 +93,7 @@ export class GameScene extends Phaser.Scene {
   /* Método para cuando se hace la colisión entre
   la `ball` y la `platform` */
   behaviorCollider () {
-    this.score++;
-    this.scoreText.setText(`PUNTOS: ${this.score}`);
+    this.scoreboard.addPoints(1);
   }
 
   update () {
