@@ -43,6 +43,12 @@ export class GameScene extends Phaser.Scene {
     this.platform = null;
     this.cursor = null;
     this.ball = null;
+    this.scoreText = null;
+  }
+
+  /* Valores que puedo inicializar */
+  init () {
+    this.score = 0;
   }
 
   preload () {
@@ -57,7 +63,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create () {
-    /* Definimos los límites del `world` para que la `ball` 
+    /* Definimos los límites del `world` para que la `ball`
     pueda rebotar: ---------------------> izq., der., arr., aba. */
     this.physics.world.setBoundsCollision(true, true, true, false);
     /* Ponemos las imágenes en el juego */
@@ -81,13 +87,20 @@ export class GameScene extends Phaser.Scene {
     // No visible el mensaje de `gameover`
     this.gameover.visible = false;
 
+    /* Ponemos el texto en pantalla para el `score` */
+    this.scoreText = this.add.text(16, 16, 'PUNTOS: 0', {
+      fontSize: '20px',
+      fill: 'white',
+      fontFamily: 'verdana, arial, sans-serif',
+    });
+
     // Ponemos la `ball` con las `physics`
     this.ball =
       this.physics.add.image(400, 100, 'ball')
         .setScale(assetsJson.symbols.scale);
-    /* Luego de crearla le decimos que se adapte a los límites 
+    /* Luego de crearla le decimos que se adapte a los límites
      del `world` */
-     this.ball.setCollideWorldBounds(true);
+    this.ball.setCollideWorldBounds(true);
     // Mostramos la `platform-normal` con physics
     this.platform =
       this.physics.add.image(400, 460, 'platform-normal')
@@ -101,7 +114,10 @@ export class GameScene extends Phaser.Scene {
     }
     this.ball.setVelocity(velocity, 10);
     // Colisión entre la `platform` y la `ball`
-    this.physics.add.collider(this.ball, this.platform);
+    this.physics.add.collider(this.ball, this.platform,
+      /* Comportamiento, Callback, Contexto */
+      this.behaviorCollider, null, this);
+    // this.behaviorCollider.bind(this), null); // otra forma
     // Hacemos un rebote de la `ball`
     this.ball.setBounce(1);
     // La plata forma la hacemos inmovible
@@ -109,6 +125,13 @@ export class GameScene extends Phaser.Scene {
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
+  }
+
+  /* Método para cuando se hace la colisión entre
+  la `ball` y la `platform` */
+  behaviorCollider () {
+    this.score++;
+    this.scoreText.setText(`PUNTOS: ${this.score}`);
   }
 
   update () {

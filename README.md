@@ -420,3 +420,53 @@ la `scene`:
       this.scene.pause();
     }
 ```
+
+## 04. Colisiones con comportamientos personalizados
+
+1. El método de `Phaser` llamado `collider` en el `create` de
+**game.js**, le adicionamos un método propio llamado:
+`behaviorCollider` así queda este `physics`:
+```js
+    // Colisión entre la `platform` y la `ball`
+    this.physics.add.collider(this.ball, this.platform,
+      this.behaviorCollider, null, this);
+```
+2. Creamos el método después del `create` de nombre 
+`behaviorCollider`:
+```js
+  behaviorCollider () {
+    console.log('poing');
+  }
+```
+3. Creo una función, debajo de `constructor` en **game.js**,
+de nombre `init()` con el valor inicial de un `score`:
+```js
+  init () {
+    this.score = 0;
+  }
+```
+3. Usamos el `score` para incrementarlo en el método 
+`behaviorCollider`:
+```js
+  behaviorCollider () {
+    this.score++;
+    console.log(this.score);
+  }
+```
+4. Ponemos un texto en pantalla en la función `create` de
+**game.js**, justo antes de definir la `ball`:
+```js
+    this.scoreText = this.add.text(16, 16, 'PUNTOS: 0', {
+      fontSize: '20px',
+      fill: 'white',
+      fontFamily: 'verdana, arial, sans-serif',
+    });
+```
+5. Ponemos en el nuevo `scoreText` el valor de `score` en
+el método `behaviorCollider` de **game.js**:
+```js
+  behaviorCollider () {
+    this.score++;
+    this.scoreText.setText(`PUNTOS: ${this.score}`);
+  }
+```
