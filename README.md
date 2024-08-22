@@ -596,3 +596,75 @@ le pongo un valor aleatorio a esa velocidad en X:
       ball.setVelocityX(10 * relativeImpact);
     }
 ```
+
+## 07. Posición Inicial de la `ball`
+
+1. En el **main.js** tengo definida la `gravity`, pues resulta
+que se la debemos quitar.
+2. En el **game.js** en el método `create` tenemos una variable 
+definida como `velocity` y quitamos lo relacionado con esa 
+variable.
+>[!WARNING]  
+> El anterior cambio genera que la bola se quede estancada en la
+>parte superior.
+
+3. Cambio la posición de la `ball` en `create` de **game.js**:
+```js
+    this.ball =
+      this.physics.add.image(400, 449, 'ball')
+        .setScale(assetsJson.symbols.scale)
+        .setOrigin(0.5, 1);
+```
+4. Cambio la posición de la `platform` en `create` de **game.js**:
+```js
+    this.platform =
+      this.physics.add.image(400, 450, 'platform-normal')
+        .setScale(assetsJson.platforms.scale)
+        .setOrigin(0.5, 0);
+```
+5. En el método `update` si la `ball` está muy cerca de la
+`platform` le pongo la velocidad que tenga esa `platform` en
+**game.js**:
+```js
+    if (this.platform.y - this.ball.y <= 1) {
+      this.ball.setVelocityX(this.platform.body.velocity.x);
+    }
+```
+6. El `GamoOver` tambien le cambio la condición y le añado el
+alto de la `ball`:
+```js
+    if (this.ball.y >= 500 + this.ball.body.height) {
+      console.log('GameOver');
+      this.gameover.visible = true;
+      this.scene.pause();
+```
+7. Añado en el `update` de **game.js**, otra tecla mas que serían
+`space` y `up`, para el salto de la `ball` y antes de llamar el
+`gamover`:
+```js
+    if (this.platform.y - this.ball.y <= 1) {
+      this.ball.setVelocityX(this.platform.body.velocity.x);
+      /* Salta la `ball` si está en contacto con la `platform` */
+      if (this.cursor.space.isDown || this.cursor.up.isDown) {
+        this.ball.setVelocity(Phaser.Math.Between(-20, 20), -300);
+      }
+    }
+```
+8. Creo un atributo dentro de la `ball` de nombre `glue`, que
+lo inicializo en `true`, esto al momento de crear la `ball`:
+```js
+    this.ball.glue = true;
+```
+9. En el momento que presiono la barra `space` o la tecla `up`,
+la pongo en false.
+10. La condición que valida lo cerca que está le añado en la
+condición que el `glue` sea `true`:
+```js
+    if (this.platform.y - this.ball.y <= 1 && this.ball.glue) {
+      this.ball.setVelocityX(this.platform.body.velocity.x);
+      if (this.cursor.space.isDown || this.cursor.up.isDown) {
+        this.ball.setVelocity(Phaser.Math.Between(-20, 20), -300);
+        this.ball.glue = false;
+      }
+    }
+```
