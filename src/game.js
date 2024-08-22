@@ -92,8 +92,20 @@ export class GameScene extends Phaser.Scene {
 
   /* Método para cuando se hace la colisión entre
   la `ball` y la `platform` */
-  behaviorCollider () {
+  behaviorCollider (ball, platform) {
+    // Llamo la función de **Scoreboard.js**
     this.scoreboard.addPoints(1);
+    /* Los comportamientos entre la `ball` y la `platform`
+    obteniendo la posición relativa entre estos */
+    const relativeImpact = ball.x - platform.x;
+    console.log(relativeImpact);
+    // se añade condición si el valor esta muy en el centro
+    if (relativeImpact <= 0.1 && relativeImpact >= -0.1) {
+      ball.setVelocityX(Phaser.Math.Between(-10, 10));
+    } else {
+      // Cambia la velociad de X en función a este valor
+      ball.setVelocityX(10 * relativeImpact);
+    }
   }
 
   update () {
