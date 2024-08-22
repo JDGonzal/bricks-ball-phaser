@@ -59,23 +59,27 @@ export class GameScene extends Phaser.Scene {
 
     // Ponemos la `ball` con las `physics`
     this.ball =
-      this.physics.add.image(400, 100, 'ball')
-        .setScale(assetsJson.symbols.scale);
+      this.physics.add.image(400, 449, 'ball')
+        .setScale(assetsJson.symbols.scale)
+        .setOrigin(0.5, 1);
+    // Añado a `ball` el valor de `glue`
+    this.ball.glue = true;
     /* Luego de crearla le decimos que se adapte a los límites
      del `world` */
     this.ball.setCollideWorldBounds(true);
     // Mostramos la `platform-normal` con physics
     this.platform =
-      this.physics.add.image(400, 460, 'platform-normal')
-        .setScale(assetsJson.platforms.scale);
+      this.physics.add.image(400, 450, 'platform-normal')
+        .setScale(assetsJson.platforms.scale)
+        .setOrigin(0.5, 0);
     // Como la plataforma cae le decimos q no va a tener gravedad
     this.platform.body.allowGravity = false;
     // La velocidad(x,y) de la `ball` será aleatoria
-    let velocity = 100 * Phaser.Math.Between(1.3, 2);
-    if (Phaser.Math.Between(0, 10) > 5) {
-      velocity = 0 - velocity;
-    }
-    this.ball.setVelocity(velocity, 10);
+    // let velocity = 100 * Phaser.Math.Between(1.3, 2);
+    // if (Phaser.Math.Between(0, 10) > 5) {
+    //   velocity = 0 - velocity;
+    // }
+    // this.ball.setVelocity(velocity, 10);
     // Colisión entre la `platform` y la `ball`
     this.physics.add.collider(this.ball, this.platform,
       /* Comportamiento, Callback, Contexto */
@@ -100,8 +104,8 @@ export class GameScene extends Phaser.Scene {
     const relativeImpact = ball.x - platform.x;
     console.log(relativeImpact);
     // se añade condición si el valor esta muy en el centro
-    if (relativeImpact <= 0.1 && relativeImpact >= -0.1) {
-      ball.setVelocityX(Phaser.Math.Between(-10, 10));
+    if (relativeImpact <= 1 && relativeImpact >= -1) {
+      ball.setVelocityX(Phaser.Math.Between(-20, 20));
     } else {
       // Cambia la velociad de X en función a este valor
       ball.setVelocityX(10 * relativeImpact);
@@ -117,9 +121,20 @@ export class GameScene extends Phaser.Scene {
       this.platform.setVelocityX(500);
     } else this.platform.setVelocityX(0);
 
+    /* Asociamos la velocidad de la `ball` a la `platform`
+    cuando la `ball` esté muy cerquita de la `platform` */
+    if (this.platform.y - this.ball.y <= 1 && this.ball.glue) {
+      this.ball.setVelocityX(this.platform.body.velocity.x);
+      /* Salta la `ball` si está en contacto con la `platform` */
+      if (this.cursor.space.isDown || this.cursor.up.isDown) {
+        this.ball.setVelocity(Phaser.Math.Between(-20, 20), -300);
+        this.ball.glue = false;
+      }
+    }
+
     // Si la `ball` se sale del juego se da por terminado el juego
-    if (this.ball.y >= 500) {
-      console.log('GamoeOver');
+    if (this.ball.y >= 500 + this.ball.body.height) {
+      console.log('GameOver');
       this.gameover.visible = true;
       this.scene.pause();
     }
