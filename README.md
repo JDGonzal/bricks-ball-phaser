@@ -562,3 +562,37 @@ nuevo componente ``:
 ```js
 import { preloadFromJson } from './components/jsonUtils.js';
 ```
+
+## 06. Rebote de la `ball` en función de la posición relativa con la `platform`
+
+1. En el método `behaviorCollider`, puedo recibir dos parámetros
+como son la `ball` y la `platform`, mismo orden al momento de
+crear la `collider`, en **game.js**:
+```js
+  behaviorCollider (ball, platform) {
+    // Llamo la función de **Scoreboard.js**
+    this.scoreboard.addPoints(1);
+  }
+```
+2. Defino el comportamiento entre la `ball` y la `platform` dentro
+del método `behaviorCollider` de **game.js**, obteniendo la
+posición relativa entre estos:
+```js
+    const relativeImpact = ball.x - platform.x;
+    console.log(relativeImpact);
+    console.log(platform.body.width, ball.body.width);
+```
+3. Con base en el punto que golpeé la `ball` en la `platform`,
+cambia la velociad de X, en función a este valor:
+```js
+    ball.setVelocityX(10 * relativeImpact);
+```
+4. Agrego una condición si el valor es muy cercano al cero,
+le pongo un valor aleatorio a esa velocidad en X:
+```js
+    if (relativeImpact <= 0.1 && relativeImpact >= -0.1) {
+      ball.setVelocityX(Phaser.Math.Between(-10, 10));
+    } else {
+      ball.setVelocityX(10 * relativeImpact);
+    }
+```
