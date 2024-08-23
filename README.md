@@ -668,3 +668,70 @@ condición que el `glue` sea `true`:
       }
     }
 ```
+
+## 08. Poner lo `bricks` en un `staticGroup`
+
+1. Vamos a trabajar con 4 tipos de bloques, que ya los tenemos
+precargados en `preload` de **game,js**, basados en el archivo
+**assets.json**:
+* `brick-blue`
+* `brick-yellow`
+* `brick-green`
+* `brick-orange`
+2. Creo una variable de nombre `bricks` en el `constructor` de 
+**game.js**.
+3. En el `create` de justo después de `background`, 
+definimos la nueva variable `bricks`:
+```js
+    this.bricks = this.physics.add.staticGroup();
+```
+4. Al grupo de nombre `bricks`, le asociamos al menos dos de
+los ladrillos precargados: `brick-blue` y `brick-green`:
+```js
+    this.bricks.create(254, 244, 'brick-blue')
+      .setScale(assetsJson.bricks.scale).refreshBody();
+    this.bricks.create(375, 232, 'brick-green')
+      .setScale(assetsJson.bricks.scale).refreshBody();
+```
+>[!TIP]  
+>En este momento la bola cruza por los ladrillos sin tener 
+>contacto con ellos, es decir sin tener colisiones.
+5. Debajo del primer `collider`, agregamos otro entre la 
+`ball` y los `bricks`:
+```js
+    this.physics.add.collider(this.ball, this.bricks);
+```
+>[!TIP]  
+>Lo del `gameover` lo movemos al final del `create`
+6. Cambiamos la forma de crear el `staticGroup`, con 
+valore varios:
+```js
+    this.bricks = this.physics.add.staticGroup({
+      key: ['brick-blue', 'brick-orange', 'brick-green', 'brick-yellow'],
+      frameQuantity: 10,
+      scale: assetsJson.bricks.scale,
+      gridAlign: {
+        width: 10,
+        height: 4,
+        cellWidth: 67,
+        cellHeight: 34,
+        x: 112,
+        y: 100,
+      },
+    });
+```
+>[!CAUTION]  
+>Hasta aquí el pone los ladrillos en la escala original y
+>por tanto quedan muy grandes:  
+>![Bricks Group](images/2024-08-23_140225.png "this.bricks = this.physics.add.staticGroup")
+
+7. Añado un recorrido por los elementos de los `bricks` de 
+nombre `children`, y realizo los ajustes de `scale`, `size` y
+posición en `x`:
+```js
+    this.bricks.children.each(function (partOf) {
+      partOf.setScale(assetsJson.bricks.scale);
+      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+      partOf.x -= 112 + 90;
+    });
+```

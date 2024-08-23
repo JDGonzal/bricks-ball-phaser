@@ -14,6 +14,7 @@ export class GameScene extends Phaser.Scene {
     this.cursor = null;
     this.ball = null;
     this.scoreboard = null;
+    this.bricks = null;
   }
 
   /* Valores que puedo inicializar */
@@ -36,12 +37,39 @@ export class GameScene extends Phaser.Scene {
     /* Definimos los límites del `world` para que la `ball`
     pueda rebotar: ---------------------> izq., der., arr., aba. */
     this.physics.world.setBoundsCollision(true, true, true, false);
+
     /* Ponemos las imágenes en el juego */
     this.background =
       this.add.image(0, 0, 'background')
         .setOrigin(0, 0);
-    this.gameover =
-      this.add.image(400, 250, 'gameover');
+
+    // Definimos la variable `staticGroup`
+    // this.bricks = this.physics.add.staticGroup();
+    // this.bricks.create(254, 244, 'brick-blue')
+    //   .setScale(assetsJson.bricks.scale).refreshBody();
+    // this.bricks.create(375, 232, 'brick-green')
+    //   .setScale(assetsJson.bricks.scale).refreshBody();
+    this.bricks = this.physics.add.staticGroup({
+      key: ['brick-blue', 'brick-orange', 'brick-green', 'brick-yellow'],
+      frameQuantity: 10,
+      // scale: assetsJson.bricks.scale,
+      gridAlign: {
+        width: 10,
+        height: 4,
+        cellWidth: 67,
+        cellHeight: 34,
+        x: 112,
+        y: 100,
+      },
+    });
+    /* Añado un recorrido de los `children` del grupo de
+    nombre `bricks` para ajustar: `scale`, `size` y
+    posición `x` */
+    this.bricks.children.each(function (partOf) {
+      partOf.setScale(assetsJson.bricks.scale);
+      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+      partOf.x -= 112 + 90;
+    });
 
     // Si quiero ver en pantalla lo del json
     /*
@@ -51,8 +79,6 @@ export class GameScene extends Phaser.Scene {
     y = createFromJson(this, assetsJson.platforms, 0, y) + 26;
     createFromJson(this, assetsJson.symbols, 0, y);
     /* */
-    // No visible el mensaje de `gameover`
-    this.gameover.visible = false;
 
     // Invomcamos el `create` del componente `Scoreboard`
     this.scoreboard.create();
@@ -80,10 +106,14 @@ export class GameScene extends Phaser.Scene {
     //   velocity = 0 - velocity;
     // }
     // this.ball.setVelocity(velocity, 10);
+
     // Colisión entre la `platform` y la `ball`
     this.physics.add.collider(this.ball, this.platform,
       /* Comportamiento, Callback, Contexto */
       this.behaviorCollider, null, this);
+    // Colisión entre la `ball` y el grupo de `bricks`
+    this.physics.add.collider(this.ball, this.bricks);
+
     // this.behaviorCollider.bind(this), null); // otra forma
     // Hacemos un rebote de la `ball`
     this.ball.setBounce(1);
@@ -92,6 +122,12 @@ export class GameScene extends Phaser.Scene {
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
+
+    // Debe ser lo último en crearse para q parezca encima de todo
+    this.gameover =
+        this.add.image(400, 250, 'gameover');
+    // No visible el mensaje de `gameover`
+    this.gameover.visible = false;
   }
 
   /* Método para cuando se hace la colisión entre
