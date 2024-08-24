@@ -15,6 +15,7 @@ export class GameScene extends Phaser.Scene {
     this.ball = null;
     this.scoreboard = null;
     this.bricks = null;
+    this.congratulations = null;
   }
 
   /* Valores que puedo inicializar */
@@ -26,6 +27,8 @@ export class GameScene extends Phaser.Scene {
     /* Precargamos los archivos de imagenes */
     this.load.image('background', './assets/background.png');
     this.load.image('gameover', './assets/gameover.png');
+    this.load
+      .image('congratulations', './assets/congratulations.png');
 
     preloadFromJson(this, assetsJson.bricks);
     preloadFromJson(this, assetsJson.boxes);
@@ -59,7 +62,7 @@ export class GameScene extends Phaser.Scene {
         cellWidth: 67,
         cellHeight: 34,
         x: 112,
-        y: 100,
+        y: 20,
       },
     });
     /* Añado un recorrido de los `children` del grupo de
@@ -68,7 +71,9 @@ export class GameScene extends Phaser.Scene {
     this.bricks.children.each(function (partOf) {
       partOf.setScale(assetsJson.bricks.scale);
       partOf.setSize(partOf.displayWidth, partOf.displayHeight);
-      partOf.x -= 112 + 90;
+      partOf.x -= 112 + 85;
+      partOf.setOrigin(0.5, 1);
+      partOf.refreshBody(); // Este siempre de último
     });
 
     // Si quiero ver en pantalla lo del json
@@ -110,11 +115,14 @@ export class GameScene extends Phaser.Scene {
     // Colisión entre la `platform` y la `ball`
     this.physics.add.collider(this.ball, this.platform,
       /* Comportamiento, Callback, Contexto */
-      this.behaviorCollider, null, this);
-    // Colisión entre la `ball` y el grupo de `bricks`
-    this.physics.add.collider(this.ball, this.bricks);
+      this.platformImpact, null, this);
+    // this.platformImpact.bind(this), null); // otra forma
 
-    // this.behaviorCollider.bind(this), null); // otra forma
+    // Colisión entre la `ball` y el grupo de `bricks`
+    this.physics.add.collider(this.ball, this.bricks,
+      /* Comportamiento, Callback, Contexto */
+      this.bricksImpact, null, this);
+
     // Hacemos un rebote de la `ball`
     this.ball.setBounce(1);
     // La plata forma la hacemos inmovible
@@ -128,11 +136,16 @@ export class GameScene extends Phaser.Scene {
         this.add.image(400, 250, 'gameover');
     // No visible el mensaje de `gameover`
     this.gameover.visible = false;
+    // Similar al gameover, va al final
+    this.congratulations =
+      this.add.image(400, 250, 'congratulations');
+    // No visible el mensaje de `congratulations`
+    this.congratulations.visible = false;
   }
 
   /* Método para cuando se hace la colisión entre
   la `ball` y la `platform` */
-  behaviorCollider (ball, platform) {
+  platformImpact (ball, platform) {
     // Llamo la función de **Scoreboard.js**
     this.scoreboard.addPoints(1);
     /* Los comportamientos entre la `ball` y la `platform`
@@ -144,7 +157,23 @@ export class GameScene extends Phaser.Scene {
       ball.setVelocityX(Phaser.Math.Between(-20, 20));
     } else {
       // Cambia la velociad de X en función a este valor
-      ball.setVelocityX(10 * relativeImpact);
+      ball.setVelocityX(Phaser.Math.Between(6, 10) *
+        relativeImpact);
+    }
+  }
+
+  /* Método para cuando se hace la colisión entre
+  la `ball` y los `bricks` */
+  bricksImpact (ball, brick) {
+    // Desaparecemos el ladrillo q fué impactado
+    brick.disableBody(true, true);
+    // Llamo la función de **Scoreboard.js**
+    this.scoreboard.addPoints(10);
+    /* con el método `countActive` sabremos cuantos `bricks`
+    nos quedan disponibles */
+    if (this.bricks.countActive() === 0) {
+      this.congratulations.visible = true;
+      this.scene.pause();
     }
   }
 

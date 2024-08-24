@@ -735,3 +735,83 @@ posición en `x`:
       partOf.x -= 112 + 90;
     });
 ```
+
+## 09. Manejo de la colisión entre la `ball` y los `bricks`
+1. El nombre inicial de `behaviorCollider` lo cambiamos por
+`platformImpact` en todo el archivo **game.js**.
+2. Similar al `collider` de la `ball`, añado una función o 
+callback para el manejo del comportamiento de la `ball` con el
+grupo `bricks` de nombre `bricksImpact`:
+```js
+    this.physics.add.collider(this.ball, this.bricks,
+      this.bricksImpact, null, this);
+```
+3. Creamos la función `bricksImpact`, con un `consol.log`:
+```js
+  bricksImpact (ball, brick) {
+    console.log(brick.texture);
+  }
+```
+>[!WARNING]  
+>Golpea mas arriba de la imagen, se debe corregir al momento del
+>recorrido de los `children` de `bricks`.
+
+>[!TIP]  
+>Para visualizar mejor la causa del error, en el archivo 
+>**main.js**, cambiar el `debug: false,` por `debug: true,`.
+
+4. El recorrido de `children` de `bricks`, se añaden dos 
+funciones mas: `setOrigin` y `refreshBody`:
+```js
+    this.bricks.children.each(function (partOf) {
+      partOf.setScale(assetsJson.bricks.scale);
+      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+      partOf.x -= 112 + 85;
+      partOf.setOrigin(0.5, 1);
+      partOf.refreshBody(); // Este siempre de último
+    });
+```
+5. Por ahora solo vamos a desaparecer el `brick` del grupo `bricks`
+que fue impactado con la `ball`, en la función `bricksImpact` de
+**game.js**:
+```js
+  bricksImpact (ball, brick) {
+    brick.disableBody(true, true);
+  }
+```
+>[!TIP]  
+>Los `bricks` los veo muy cerca , tose los voy mover mas arriba
+>cambiando en la creación el eje de `y` a `20`.
+
+6. Incremenatamos el puntaje del juego en el método `bricksImpact`:
+```js
+    this.scoreboard.addPoints(10);
+```
+7. Si completamos los 40 `bricks`, el juego debe terminar con un 
+aviso de felicitaciones, este en el objeto `congratulations`, 
+primero se define en el `constructor` y luego se precarga en 
+`preload` y se crea en `create`, justo debajo del `gameover`:
+```js
+    this.congratulations =
+      this.add.image(400, 250, 'congratulations');
+    this.congratulations.visible = false;
+```
+8. Con el método de los `staticGroup` de nombre `countActive`,
+sabremos cuantos ladrillos nos quedan para completar la tarea, esto
+en la función `bricksImpact` de
+**game.js**:
+```js
+    if (this.bricks.countActive() === 0) {
+      this.congratulations.visible = true;
+      this.scene.pause();
+    }
+```
+>[!TIP]   
+>Debido a que la velocidad por 10 en el método `platformImpact`
+> es muy rápido, lo cambié a aleatorio entre 6 y 10, en el `else`:
+>```js
+>      else {
+>      ball.setVelocityX(Phaser.Math.Between(6, 10) *
+>        relativeImpact);
+>      }
+>```` 
