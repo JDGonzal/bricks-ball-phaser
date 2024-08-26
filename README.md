@@ -746,7 +746,7 @@ grupo `bricks` de nombre `bricksImpact`:
     this.physics.add.collider(this.ball, this.bricks,
       this.bricksImpact, null, this);
 ```
-3. Creamos la función `bricksImpact`, con un `consol.log`:
+3. Creamos la función `bricksImpact`, con un `console.log`:
 ```js
   bricksImpact (ball, brick) {
     console.log(brick.texture);
@@ -780,7 +780,7 @@ que fue impactado con la `ball`, en la función `bricksImpact` de
   }
 ```
 >[!TIP]  
->Los `bricks` los veo muy cerca , tose los voy mover mas arriba
+>Los `bricks` los veo muy cerca, entoces los voy mover mas arriba
 >cambiando en la creación el eje de `y` a `20`.
 
 6. Incremenatamos el puntaje del juego en el método `bricksImpact`:
@@ -789,7 +789,7 @@ que fue impactado con la `ball`, en la función `bricksImpact` de
 ```
 7. Si completamos los 40 `bricks`, el juego debe terminar con un 
 aviso de felicitaciones, este en el objeto `congratulations`, 
-primero se define en el `constructor` y luego se precarga en 
+primero se define en el `constructor`, luego se precarga en 
 `preload` y se crea en `create`, justo debajo del `gameover`:
 ```js
     this.congratulations =
@@ -815,3 +815,218 @@ en la función `bricksImpact` de
 >        relativeImpact);
 >      }
 >```` 
+
+## 10. Gestión de escenas
+>[!NOTE]  
+>El video #5, empieza con implementar el ambiente con `npm`, que
+>ya fue cubierto en [00. Precondiciones](#00-precondiciones) y en 
+>[01. Local Setup](#01-local-setup), en nuestro caso usamos
+>`pnpm` en el `nodejs`.  
+>Simpre inicializamos la ejecución con `pnpm dev`.
+
+1. Creamos una carpeta en "src", de nombre "scenes".
+2. Movemos el archivo **game.js** a la nueva carperta
+"src/scenes".
+
+>[!TIP]  
+>El sistema debe actualizar las rutas y el juego seguir funcionando
+>
+>Revisar en **main.js** la ruta que importa de `GameScene`.
+
+3. Renombramos el archivo **game.js** a **GameScene.js**.
+4. Creamos en la nueva carpeta "src/scenes" el archivo de nombre
+**GameOverScene.js**.
+5. Empezamos con importar el `Phaser` y la creación de una `class`
+extendida de  `Phaser.Scene`, en el archivo **GameOverScene.js**:
+```js
+import Phaser from 'phaser';
+
+export class GameOverScene extends Phaser.Scene {
+}
+```
+6. Copio el nuevo **GameOverScene.js** y lo renombro como 
+**CongratulationsScene.js**.
+7. Cambiamos el contenido para quedar así:
+```js
+import Phaser from 'phaser';
+
+export class CongratulationsScene extends Phaser.Scene {
+}
+```
+8. A ambas nuevas clases, le pongo el constructor con la `key`
+correspondiente y le pongo los métodos vacíos de `preload`,
+`create` y `update`:  
+**GameOverScene.js**:
+```js
+import Phaser from 'phaser';
+
+export class GameOverScene extends Phaser.Scene {
+  constructor () {
+    super({ key: 'scene-game-over' });
+  }
+
+  preload () {}
+
+  create () {}
+
+  update () {}
+}
+```
+**CongratulationsScene.js**:
+```js
+import Phaser from 'phaser';
+
+export class CongratulationsScene extends Phaser.Scene {
+  constructor () {
+    super({ key: 'scene-congratulations' });
+  }
+
+  preload () {}
+
+  create () {}
+
+  update () {}
+}
+```
+9. En el archivo **main.js**, importamos las dos nuevas clases:
+```js
+import { GameOverScene } from './scenes/GameOverScene.js';
+import { CongratulationsScene } from './scenes/CongratulationsScene.js';
+```
+10. En el `config` del archivo **main.js**, añadimos las dos nuevas 
+escenas:
+```js
+const config = {
+  ...
+  scene: [GameScene, GameOverScene, CongratulationsScene],
+  ...
+};
+```
+11. En cada nueva clase, agregamos el un constructor y por ende
+el `super({ key: '...' });`, con el nombre de cada escena.
+12. En la carpeta "src/components", creamos un archivo de nombre
+**RestartButton.js**, con este código:
+```js
+export class RestartButton {
+  constructor (game) {
+    this.game = game;
+  }
+  
+  preload () {}
+
+  create () {}
+}
+```
+13. En el método `preload` de **RestartButton.js**, precargo la
+imagen **restart.png**:
+```js
+  preload () {
+    this.game.load
+      .spritesheet('button', './assets/restart.png', {
+        frameWidth: 190, 
+        frameHeight: 49, 
+      });
+  }
+```
+14. Defino en **RestartButton.js** la variable `startButton` en el
+`constructor` y en el método `create`, lo asigno al botón a 
+mostrar:
+```js
+    this.startButton = this.game.add.sprite(400, 400, 'button')
+      .setInteractive();
+```
+15. Pongo dos comportamientos al `button`, que son: `pointerover` 
+y `pointerout`, en el `create` de **RestartButton.js**:
+```js
+    this.startButton.on('pointerover', () => {
+      this.startButton.setFrame(1);
+    });
+    this.startButton.on('pointerout', () => {
+      this.startButton.setFrame(0);
+    });
+```
+16. Cuando se presiona el click del mouse en el `button`, pongo
+esto en el `create` **RestartButton.js**:
+```js
+    this.startButton.on('pointerdown', () => {
+      this.game.scene.start('scene-game');
+    });
+```
+17. En el archivo **GameOverScene.js**, importo el `button`:
+```js
+import { RestartButton } from '../components/RestartButton';
+```
+18. En el `constructor` de **GameOverScene.js**, instancio el 
+`RestartButton`:
+```js
+    this.restartButton = new RestartButton(this);
+```
+19. En el `preload` y el `crate` de **GameOverScene.js** muevo 
+lo relacionado con `gameover` de **GameScene.js**:
+```js
+    this.load.image('gameover', './assets/gameover.png');
+```
+20. llamo el método `preload` de `RestartButton` en el `preload`
+de **GameOverScene.js**:
+```js
+    this.restartButton.preload();
+```
+21. En el `create` de **GameOverScene.js**, pongo en pantalla
+la imagen `gamover` (la muevo de **GameScene.js**) y el 
+`background` sin asociar a ninguna variable:
+```js
+    this.add.image(0, 0, 'background').setOrigin(0, 0);
+    this.gameover =
+        this.add.image(400, 250, 'gameover');
+```
+22. Invoco el método `create` de `RestartButton` en el `create` 
+de **GameOverScene.js**:
+```js
+    this.restartButton.create();
+```
+23. 
+23. Hacemos algo similar en el archivo **CongratulationsScene.js**
+moviendo también lo similar de **GameOverScene.js**:
+```js
+import Phaser from 'phaser';
+import { RestartButton } from '../components/RestartButton';
+
+export class CongratulationsScene extends Phaser.Scene {
+  constructor () {
+    super({ key: 'scene-congratulations' });
+
+    this.restartButton = new RestartButton(this);
+    this.congratulations = null;
+  }
+
+  preload () {
+    this.load
+      .image('congratulations', './assets/congratulations.png');
+    this.restartButton.preload();
+  }
+
+  create () {
+    this.add.image(0, 0, 'background').setOrigin(0, 0);
+    this.congratulations =
+      this.add.image(400, 250, 'congratulations');
+    this.restartButton.create();
+  }
+
+  update () {}
+}
+```
+24. En el archivo **GameScene.js**, en el la línea :  
+`this.gameover.visible = true;` , por el llamado a otra escena:
+```js
+    if (this.ball.y >= 500 + this.ball.body.height) {
+      console.log('GameOver');
+      this.scene.start('scene-game-over');
+    }
+```
+
+>[!TIP]  
+>En **GameScene.js**, añadí una constante `BRICKS_BY_COLOR`, para
+>las pruebas de número de ladrillos de cada color, y en
+>**main.js**, cambio el `debug: false,` por `debug: true,`, a fin
+>de probar el llamado a `congratulations`.
+ 

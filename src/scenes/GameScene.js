@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
-import assetsJson from './assets.json'; // assert { type: 'json' };
-import { Scoreboard } from './components/Scoreboard.js';
-import { preloadFromJson /*, createFromJson */ } from './components/jsonUtils.js';
+import assetsJson from '../assets.json'; // assert { type: 'json' };
+import { Scoreboard } from '../components/Scoreboard.js';
+import { preloadFromJson /*, createFromJson */ } from '../components/jsonUtils.js';
+
+const BRICKS_BY_COLOR = 10;
 
 /* Se exporta la clase a usar de la Escena */
 export class GameScene extends Phaser.Scene {
@@ -9,13 +11,11 @@ export class GameScene extends Phaser.Scene {
     super({ key: 'scene-game' });
 
     this.background = null;
-    this.gameover = null;
     this.platform = null;
     this.cursor = null;
     this.ball = null;
     this.scoreboard = null;
     this.bricks = null;
-    this.congratulations = null;
   }
 
   /* Valores que puedo inicializar */
@@ -26,9 +26,6 @@ export class GameScene extends Phaser.Scene {
   preload () {
     /* Precargamos los archivos de imagenes */
     this.load.image('background', './assets/background.png');
-    this.load.image('gameover', './assets/gameover.png');
-    this.load
-      .image('congratulations', './assets/congratulations.png');
 
     preloadFromJson(this, assetsJson.bricks);
     preloadFromJson(this, assetsJson.boxes);
@@ -54,7 +51,7 @@ export class GameScene extends Phaser.Scene {
     //   .setScale(assetsJson.bricks.scale).refreshBody();
     this.bricks = this.physics.add.staticGroup({
       key: ['brick-blue', 'brick-orange', 'brick-green', 'brick-yellow'],
-      frameQuantity: 10,
+      frameQuantity: BRICKS_BY_COLOR,
       // scale: assetsJson.bricks.scale,
       gridAlign: {
         width: 10,
@@ -130,17 +127,6 @@ export class GameScene extends Phaser.Scene {
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
-
-    // Debe ser lo último en crearse para q parezca encima de todo
-    this.gameover =
-        this.add.image(400, 250, 'gameover');
-    // No visible el mensaje de `gameover`
-    this.gameover.visible = false;
-    // Similar al gameover, va al final
-    this.congratulations =
-      this.add.image(400, 250, 'congratulations');
-    // No visible el mensaje de `congratulations`
-    this.congratulations.visible = false;
   }
 
   /* Método para cuando se hace la colisión entre
@@ -172,8 +158,8 @@ export class GameScene extends Phaser.Scene {
     /* con el método `countActive` sabremos cuantos `bricks`
     nos quedan disponibles */
     if (this.bricks.countActive() === 0) {
-      this.congratulations.visible = true;
-      this.scene.pause();
+      // Llamada a la escena q tiene el `congratulations`
+      this.scene.start('scene-congratulations');
     }
   }
 
@@ -200,8 +186,8 @@ export class GameScene extends Phaser.Scene {
     // Si la `ball` se sale del juego se da por terminado el juego
     if (this.ball.y >= 500 + this.ball.body.height) {
       console.log('GameOver');
-      this.gameover.visible = true;
-      this.scene.pause();
+      // Llamada a la escena q tiene el `gameover`
+      this.scene.start('scene-game-over');
     }
   }
 };

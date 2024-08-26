@@ -1,13 +1,15 @@
 import './style.css';
 import Phaser from 'phaser';
-import { GameScene } from './game.js';
+import { GameScene } from './scenes/GameScene.js';
+import { GameOverScene } from './scenes/GameOverScene.js';
+import { CongratulationsScene } from './scenes/CongratulationsScene.js';
 
 /* Se crea la configuración básica del Juego */
 const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 500,
-  scene: [GameScene],
+  scene: [GameScene, GameOverScene, CongratulationsScene],
   physics: {
     default: 'arcade',
     arcade: {
