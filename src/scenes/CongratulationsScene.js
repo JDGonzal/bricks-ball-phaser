@@ -14,9 +14,12 @@ export class CongratulationsScene extends Phaser.Scene {
   preload () {
     // Lo moví de **GameScene.js**
     this.load
-      .image('congratulations', './assets/congratulations.png');
+      .image('congratulations', './assets/images/congratulations.png');
     // llamo el método `preload` de `RestartButton`
     this.restartButton.preload();
+    // Precargamos el audio de `gameover`
+    this.load.audio('congratulations',
+      './assets/sounds/you_win.ogg');
   }
 
   create () {
@@ -28,6 +31,8 @@ export class CongratulationsScene extends Phaser.Scene {
       this.add.image(400, 250, 'congratulations');
     // Llamada al botón de reinicio
     this.restartButton.create();
+    // Cargamos el sonido y lo reporoducimos
+    this.sound.add('congratulations').play();
   }
 
   update () {}

@@ -13,9 +13,13 @@ export class GameOverScene extends Phaser.Scene {
 
   preload () {
     // Lo moví de **GameScene.js**
-    this.load.image('gameover', './assets/gameover.png');
+    this.load.image('gameover',
+      './assets/images/gameover.png');
     // llamo el método `preload` de `RestartButton`
     this.restartButton.preload();
+    // Precargamos el audio de `gameover`
+    this.load.audio('gameover',
+      './assets/sounds/gameover.ogg');
   }
 
   create () {
@@ -26,6 +30,8 @@ export class GameOverScene extends Phaser.Scene {
         this.add.image(400, 250, 'gameover');
     // Llamada al botón de reinicio
     this.restartButton.create();
+    // Cargamos el sonido y lo reporoducimos
+    this.sound.add('gameover').play();
   }
 
   update () {}
