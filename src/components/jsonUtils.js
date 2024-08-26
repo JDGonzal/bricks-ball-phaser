@@ -4,7 +4,7 @@ let i = 0;
 export function preloadFromJson ({ load }, { assets }) {
   assets.forEach(({ key }) => {
     i++;
-    const path = './assets/json/' +
+    const path = './assets/images/json/' +
     ('00' + i).slice(-2) +
     '-Breakout-Tiles.png';
     load.image(key, path);

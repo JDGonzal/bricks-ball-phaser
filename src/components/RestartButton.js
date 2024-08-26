@@ -6,10 +6,12 @@ export class RestartButton {
 
   preload () {
     this.game.load
-      .spritesheet('button', './assets/restart.png', {
+      .spritesheet('button', './assets/images/restart.png', {
         frameWidth: 190, // Ancho dentro de las 2 imagenes
         frameHeight: 49, // Alto de las imágenes
       });
+    this.game.load
+      .audio('start-game', './assets/sounds/start-game.ogg');
   }
 
   create () {
@@ -25,6 +27,9 @@ export class RestartButton {
     });
     // Si se presiona el `button` llama el `scene-game`
     this.startButton.on('pointerdown', () => {
+      // Pongo el sonido y doy play
+      this.game.sound.add('start-game').play();
+      // Inicio la Escena del juego principal
       this.game.scene.start('scene-game');
     });
   }

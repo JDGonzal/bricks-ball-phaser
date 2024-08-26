@@ -25,12 +25,17 @@ export class GameScene extends Phaser.Scene {
 
   preload () {
     /* Precargamos los archivos de imagenes */
-    this.load.image('background', './assets/background.png');
+    this.load.image('background', './assets/images/background.png');
 
     preloadFromJson(this, assetsJson.bricks);
     preloadFromJson(this, assetsJson.boxes);
     preloadFromJson(this, assetsJson.platforms);
     preloadFromJson(this, assetsJson.symbols);
+
+    this.load.audio('platform-impact',
+      './assets/sounds/platform-impact.ogg');
+    this.load.audio('brick-impact',
+      './assets/sounds/brick-impact.ogg');
   }
 
   create () {
@@ -134,6 +139,8 @@ export class GameScene extends Phaser.Scene {
   platformImpact (ball, platform) {
     // Llamo la función de **Scoreboard.js**
     this.scoreboard.addPoints(1);
+    // Pongo el sonido y doy play
+    this.sound.add('platform-impact').play();
     /* Los comportamientos entre la `ball` y la `platform`
     obteniendo la posición relativa entre estos */
     const relativeImpact = ball.x - platform.x;
@@ -155,6 +162,8 @@ export class GameScene extends Phaser.Scene {
     brick.disableBody(true, true);
     // Llamo la función de **Scoreboard.js**
     this.scoreboard.addPoints(10);
+    // Pongo el sonido y doy play
+    this.sound.add('brick-impact').play();
     /* con el método `countActive` sabremos cuantos `bricks`
     nos quedan disponibles */
     if (this.bricks.countActive() === 0) {

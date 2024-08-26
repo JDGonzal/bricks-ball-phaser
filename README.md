@@ -855,7 +855,8 @@ export class CongratulationsScene extends Phaser.Scene {
 ```
 8. A ambas nuevas clases, le pongo el constructor con la `key`
 correspondiente y le pongo los métodos vacíos de `preload`,
-`create` y `update`:  
+`create` y `update`: 
+
 **GameOverScene.js**:
 ```js
 import Phaser from 'phaser';
@@ -902,9 +903,8 @@ const config = {
   ...
 };
 ```
-11. En cada nueva clase, agregamos el un constructor y por ende
-el `super({ key: '...' });`, con el nombre de cada escena.
-12. En la carpeta "src/components", creamos un archivo de nombre
+
+11. En la carpeta "src/components", creamos un archivo de nombre
 **RestartButton.js**, con este código:
 ```js
 export class RestartButton {
@@ -917,7 +917,7 @@ export class RestartButton {
   create () {}
 }
 ```
-13. En el método `preload` de **RestartButton.js**, precargo la
+12. En el método `preload` de **RestartButton.js**, precargo la
 imagen **restart.png**:
 ```js
   preload () {
@@ -928,14 +928,14 @@ imagen **restart.png**:
       });
   }
 ```
-14. Defino en **RestartButton.js** la variable `startButton` en el
-`constructor` y en el método `create`, lo asigno al botón a 
-mostrar:
+13. Defino en **RestartButton.js** la variable `startButton` 
+en el `constructor` y en el método `create`, lo asigno al 
+botón a mostrar:
 ```js
     this.startButton = this.game.add.sprite(400, 400, 'button')
       .setInteractive();
 ```
-15. Pongo dos comportamientos al `button`, que son: `pointerover` 
+14. Pongo dos comportamientos al `button`, que son: `pointerover` 
 y `pointerout`, en el `create` de **RestartButton.js**:
 ```js
     this.startButton.on('pointerover', () => {
@@ -945,33 +945,33 @@ y `pointerout`, en el `create` de **RestartButton.js**:
       this.startButton.setFrame(0);
     });
 ```
-16. Cuando se presiona el click del mouse en el `button`, pongo
+15. Cuando se presiona el click del mouse en el `button`, pongo
 esto en el `create` **RestartButton.js**:
 ```js
     this.startButton.on('pointerdown', () => {
       this.game.scene.start('scene-game');
     });
 ```
-17. En el archivo **GameOverScene.js**, importo el `button`:
+16. En el archivo **GameOverScene.js**, importo el `button`:
 ```js
 import { RestartButton } from '../components/RestartButton';
 ```
-18. En el `constructor` de **GameOverScene.js**, instancio el 
+17. En el `constructor` de **GameOverScene.js**, instancio el 
 `RestartButton`:
 ```js
     this.restartButton = new RestartButton(this);
 ```
-19. En el `preload` y el `crate` de **GameOverScene.js** muevo 
+18. En el `preload` y el `crate` de **GameOverScene.js** muevo 
 lo relacionado con `gameover` de **GameScene.js**:
 ```js
     this.load.image('gameover', './assets/gameover.png');
 ```
-20. llamo el método `preload` de `RestartButton` en el `preload`
+19. llamo el método `preload` de `RestartButton` en el `preload`
 de **GameOverScene.js**:
 ```js
     this.restartButton.preload();
 ```
-21. En el `create` de **GameOverScene.js**, pongo en pantalla
+20. En el `create` de **GameOverScene.js**, pongo en pantalla
 la imagen `gamover` (la muevo de **GameScene.js**) y el 
 `background` sin asociar a ninguna variable:
 ```js
@@ -979,13 +979,12 @@ la imagen `gamover` (la muevo de **GameScene.js**) y el
     this.gameover =
         this.add.image(400, 250, 'gameover');
 ```
-22. Invoco el método `create` de `RestartButton` en el `create` 
+21. Invoco el método `create` de `RestartButton` en el `create` 
 de **GameOverScene.js**:
 ```js
     this.restartButton.create();
 ```
-23. 
-23. Hacemos algo similar en el archivo **CongratulationsScene.js**
+22. Hacemos algo similar en el archivo **CongratulationsScene.js**
 moviendo también lo similar de **GameOverScene.js**:
 ```js
 import Phaser from 'phaser';
@@ -1015,12 +1014,20 @@ export class CongratulationsScene extends Phaser.Scene {
   update () {}
 }
 ```
-24. En el archivo **GameScene.js**, en el la línea :  
+23. En el archivo **GameScene.js**, en el la línea :  
 `this.gameover.visible = true;` , por el llamado a otra escena:
 ```js
     if (this.ball.y >= 500 + this.ball.body.height) {
       console.log('GameOver');
       this.scene.start('scene-game-over');
+    }
+```
+24. En el archivo **GameScene.js**, wl condicional 
+`(this.bricks.countActive() === 0)`, llamamos el cambio de
+escena:
+```js
+    if (this.bricks.countActive() === 0) {
+      this.scene.start('scene-congratulations');
     }
 ```
 
@@ -1029,4 +1036,71 @@ export class CongratulationsScene extends Phaser.Scene {
 >las pruebas de número de ladrillos de cada color, y en
 >**main.js**, cambio el `debug: false,` por `debug: true,`, a fin
 >de probar el llamado a `congratulations`.
- 
+
+## 11. Gestión de Sonidos
+
+1. Empiezo descargando de este repositorio [sounds](https://github.com/deswebcom/ball-game-phaser/tree/sounds/sounds), los cinco archivos para trabajar
+y ponerlos en la ruta "src/public/assets/sounds".
+2. Muevo los archivos de imágenes de "src/public/assets/" a una
+nueva carpeta de nombre "images" dentro de la misma de "assets".
+3. Busco en todo el proyecto por donde usen los archivos y cambio 
+la ruta a "src/public/assets/images":
+* **jsonUtils.js**
+* **RestartButton.js**
+* **CongratulationsScene.js**
+* **GameOverScene.js**
+* **GameScene.js**
+4. En el archivo **GameOverScene.js**, en el `preload`,
+ precargamos el audio de **gameover.ogg**:
+```js
+    this.load.audio('gameover',
+      './assets/sounds/gameover.ogg');
+```
+5. En el archivo **GameOverScene.js**, en el `create`, 
+ponemos el sonido y le damos `play`:
+```js
+    this.sound.add('gameover').play();
+```
+>[!NOTE]  
+>Usé el mismo identificador `gameover` de `image` y `audio`, el
+>_Phaser_ distingue ambos en diferentes sitios.
+6. Repito en **CongratulationsScene.js**, primero en `preload`:
+```js
+    this.load.audio('congratulations',
+      './assets/sounds/you_win.ogg');
+```
+7. Y en **CongratulationsScene.js**, se pone en `create` el
+`sound` y el `play`:
+```js
+    this.sound.add('congratulations').play();
+```
+8. En el archivo **GameScene.js**, precargamos los sonidos de:
+**platform-impact.ogg** y **brick-impact.ogg**:
+```js
+    this.load.audio('platform-impact',
+      './assets/sounds/platform-impact.ogg');
+    this.load.audio('brick-impact',
+      './assets/sounds/brick-impact.ogg');
+```
+9. En el método `platformImpact`, uso el `sound` y le doy `play`
+justo depués de `addPoints(1)`:
+```js
+    this.sound.add('platform-impact').play();
+```
+10. En el método `bricksImpact`, uso el `sound` y le doy `play`
+justo depués de `addPoints(10)`:
+```js
+    this.sound.add('brick-impact').play();
+```
+11. En el archivo **RestartButton.js**, precargo en `preload`
+el audio de **start-game.ogg**:
+```js
+    this.game.load
+      .audio('start-game', './assets/sounds/start-game.ogg');
+```
+12. En el método `create` del archivo **RestartButton.js**, justo
+cuando valido la condición `startButton.on('pointerdown'`
+pongo el sonido y le doy `play`:
+```js
+      this.game.sound.add('start-game').play();
+```
