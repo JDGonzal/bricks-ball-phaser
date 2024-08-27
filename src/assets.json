@@ -76,7 +76,7 @@
     "assets": [
       { "key": "ball" },
       { "key": "star" },
-      { "key": "heart" },
+      { "key": "hearth" },
       { "key": "shot" }
     ]
   }

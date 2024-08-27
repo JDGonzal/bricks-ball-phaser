@@ -1104,3 +1104,170 @@ pongo el sonido y le doy `play`:
 ```js
       this.game.sound.add('start-game').play();
 ```
+
+## 12. Gestión de Vidas
+>[!NOTE]  
+>Ya no hay mas videos a seguir, pero si un manual escrito.
+>Trataremos de seguirlo al pie de la letra y ajustarlo a 
+>nuestras necesidades:  
+>[Cómo implementar varias vidas...](https://desarrolloweb.com/articulos/implementar-vidas-juego-phaser)
+1. Crear un componente tipo `class` de nombre **LiveCounter.js**
+en la carpeta "src/components", con al menos el `constructor`:
+```js
+export class LiveCounter {
+  constructor (game) {
+    this.game = game;
+  }
+}
+```
+2. Pasamos un parámetro mas de nombre `initialLives` y lo ponemos
+en una variable en el `constructor` de **LiveCounter.js**:
+```js
+  constructor (game, initialLives) {
+    this.game = game;
+    this.initialLives = initialLives;
+  }
+```
+5. Debemos importar el archivo **assets.json** en
+ **LiveCounter.js**:
+```js
+import assetsJson from '../assets.json';
+```
+4. Pongo un método en **LiveCounter.js**, el `create`, allí
+ponemos el uso de un `symbol`, precargado del archivo 
+**assets.json** de nombre `heart`:
+```js
+  create () {
+    /* para indicar la cantidad de píxeles que hay entre cada
+     imagen de cada vida */
+    const displacement = 30;
+    /*  la posición donde se colocaría la primera imagen,
+    que tengo que calcular en función del número de vidas
+    a mostrar en el display, */
+    const firstPosition = 800 - ((this.initialLives - 1) *
+      displacement);
+    const scale = assetsJson.symbols.scale;
+    this.liveImages = this.game.physics.add.staticGroup({
+      setScale: { x: scale, y: scale },
+      key: 'hearth',
+      frameQuantity: this.initialLives - 1,
+      gridAlign: {
+        width: this.initialLives - 1,
+        height: 1,
+        cellWidth: displacement,
+        cellHeight: 30,
+        x: firstPosition,
+        y: 1,
+      },
+    });
+  }
+```
+>[!CAUTION]  
+>Hice una corrección en un texto del **assets.json**, para la
+>el cuerpo de `symbols`, para el nombre `"hearth"`:
+>```json
+>  "symbols": {
+>    "scale": 0.2,
+>    "assets": [
+>      { "key": "ball" },
+>      { "key": "star" },
+>      { "key": "hearth" },
+>      { "key": "shot" }
+>    ]
+>  }
+>```
+
+5. Recorremos el `staticGroup` para mejorar la `scale` del
+`liveImages` en el archivo **LiveCounter.js**:
+```js
+    this.liveImages.children.each(function (partOf) {
+      partOf.setScale(scale);
+      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+      partOf.x -= 60;
+      partOf.y -= 30;
+      partOf.refreshBody(); // Este siempre de último
+    });
+```
+6. En el archivo **GameScene.js** importamos este componente e
+instanciamos la variable para usarlo en el `create` de este,
+después de la variable `this.scoreboard.create();`:
+```js
+import { LiveCounter } from '../components/LiveCounter.js';
+...
+  init () {
+    this.scoreboard = new Scoreboard(this);
+    this.liveCounter = new LiveCounter(this, 3);
+  }
+...
+  create () {
+    ...
+    this.liveCounter.create();
+    ...
+  }
+```
+7. En el archivo **LiveCounter.js**, creamos el método 
+`liveLost`:
+```js
+  liveLost () {
+    /* Nos permite saber el número de elementos que hay
+    activos y nos permite acceder a ellos */
+    if (this.liveImages.countActive() === 0) {
+      // Este métodoe está en **GameScene.js**
+      this.game.endGame();
+      return false;
+    }
+    const currentLiveLost = this.liveImages.getFirstAlive();
+    /* Borra la primera imagen que encuentra */
+    currentLiveLost.disableBody(true, true);
+    return true;
+  }
+```
+8. En el archivo **GameScene.js**, cramos un método de nombre
+`setInitialPlatformState`, con este código:
+```js
+  setInitialPlatformState () {
+    this.ball.setVelocity(0, 0).setOrigin(0.5, 1);
+    this.ball.x = 400;
+    this.ball.y = 445;
+    this.ball.glue = true;
+    this.platform.setVelocity(0, 0).setOrigin(0.5, 0);
+    this.platform.x = 400;
+    this.platform.y = 450;
+  }
+```
+9. En el archivo **GameScene.js**, cramos un método de nombre
+`endGame`, con este código:
+```js
+  endGame (completed = false) {
+    if (!completed) {
+      this.scene.start('scene-game-over');
+    } else {
+      this.scene.start('scene-congratulations');
+    }
+  }
+```
+10. En el archivo **GameScene.js**, cambiamos el contenido de 
+la condición `if (this.ball.y >= 500 + this.ball.body.height)`
+por esto:
+```js
+    if (this.ball.y >= 500 + this.ball.body.height &&
+      !this.ball.glue) {
+      const gameNotFinished = this.liveCounter.liveLost();
+      if (gameNotFinished) {
+        this.setInitialPlatformState();
+      }
+    }
+```
+11. Precargo el audio cada vez que pierdo vidas, en el 
+`preload` de **GameScene.js**.
+```js
+  preload () {
+    this.load.audio('livelost',
+      './assets/sounds/live-lost.ogg');
+  }
+```
+12. Lo invoco en el `liveLost` de **LiveCounter.js**, cada vez
+que pierdo vidas:
+```js
+    this.game.sound.add('livelost').play();
+```

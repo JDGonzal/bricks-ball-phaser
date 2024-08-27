@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import assetsJson from '../assets.json'; // assert { type: 'json' };
 import { Scoreboard } from '../components/Scoreboard.js';
 import { preloadFromJson /*, createFromJson */ } from '../components/jsonUtils.js';
+import { LiveCounter } from '../components/LiveCounter.js';
 
 const BRICKS_BY_COLOR = 10;
 
@@ -16,11 +17,13 @@ export class GameScene extends Phaser.Scene {
     this.ball = null;
     this.scoreboard = null;
     this.bricks = null;
+    this.liveCounter = null;
   }
 
   /* Valores que puedo inicializar */
   init () {
     this.scoreboard = new Scoreboard(this);
+    this.liveCounter = new LiveCounter(this, 3);
   }
 
   preload () {
@@ -36,6 +39,8 @@ export class GameScene extends Phaser.Scene {
       './assets/sounds/platform-impact.ogg');
     this.load.audio('brick-impact',
       './assets/sounds/brick-impact.ogg');
+    this.load.audio('livelost',
+      './assets/sounds/live-lost.ogg');
   }
 
   create () {
@@ -87,8 +92,10 @@ export class GameScene extends Phaser.Scene {
     createFromJson(this, assetsJson.symbols, 0, y);
     /* */
 
-    // Invomcamos el `create` del componente `Scoreboard`
+    // Invocamos el `create` del componente `Scoreboard`
     this.scoreboard.create();
+    // Invocamos el `create` del componente `LiveCounter`
+    this.liveCounter.create();
 
     // Ponemos la `ball` con las `physics`
     this.ball =
@@ -193,10 +200,30 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Si la `ball` se sale del juego se da por terminado el juego
-    if (this.ball.y >= 500 + this.ball.body.height) {
-      console.log('GameOver');
-      // Llamada a la escena q tiene el `gameover`
+    if (this.ball.y >= 500 + this.ball.body.height &&
+      !this.ball.glue) {
+      const gameNotFinished = this.liveCounter.liveLost();
+      if (gameNotFinished) {
+        this.setInitialPlatformState();
+      }
+    }
+  }
+
+  setInitialPlatformState () {
+    this.ball.setVelocity(0, 0).setOrigin(0.5, 1);
+    this.ball.x = 400;
+    this.ball.y = 445;
+    this.ball.glue = true;
+    this.platform.setVelocity(0, 0).setOrigin(0.5, 0);
+    this.platform.x = 400;
+    this.platform.y = 450;
+  }
+
+  endGame (completed = false) {
+    if (!completed) {
       this.scene.start('scene-game-over');
+    } else {
+      this.scene.start('scene-congratulations');
     }
   }
 };
