@@ -3,8 +3,7 @@ import assetsJson from '../assets.json'; // assert { type: 'json' };
 import { Scoreboard } from '../components/Scoreboard.js';
 import { preloadFromJson /*, createFromJson */ } from '../components/jsonUtils.js';
 import { LiveCounter } from '../components/LiveCounter.js';
-
-const BRICKS_BY_COLOR = 10;
+import { LevelConstructor } from '../components/Level-Constructor.js';
 
 /* Se exporta la clase a usar de la Escena */
 export class GameScene extends Phaser.Scene {
@@ -18,11 +17,16 @@ export class GameScene extends Phaser.Scene {
     this.scoreboard = null;
     this.bricks = null;
     this.liveCounter = null;
+    this.levelConstructor = null;
   }
 
   /* Valores que puedo inicializar */
   init () {
+    // instancio el `LevelConstructor`
+    this.levelConstructor = new LevelConstructor(this);
+    // instancio el `Scoreboard`
     this.scoreboard = new Scoreboard(this);
+    // instancio el `LiveCounter`
     this.liveCounter = new LiveCounter(this, 3);
   }
 
@@ -53,36 +57,6 @@ export class GameScene extends Phaser.Scene {
       this.add.image(0, 0, 'background')
         .setOrigin(0, 0);
 
-    // Definimos la variable `staticGroup`
-    // this.bricks = this.physics.add.staticGroup();
-    // this.bricks.create(254, 244, 'brick-blue')
-    //   .setScale(assetsJson.bricks.scale).refreshBody();
-    // this.bricks.create(375, 232, 'brick-green')
-    //   .setScale(assetsJson.bricks.scale).refreshBody();
-    this.bricks = this.physics.add.staticGroup({
-      key: ['brick-blue', 'brick-orange', 'brick-green', 'brick-yellow'],
-      frameQuantity: BRICKS_BY_COLOR,
-      // scale: assetsJson.bricks.scale,
-      gridAlign: {
-        width: 10,
-        height: 4,
-        cellWidth: 67,
-        cellHeight: 34,
-        x: 112,
-        y: 20,
-      },
-    });
-    /* Añado un recorrido de los `children` del grupo de
-    nombre `bricks` para ajustar: `scale`, `size` y
-    posición `x` */
-    this.bricks.children.each(function (partOf) {
-      partOf.setScale(assetsJson.bricks.scale);
-      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
-      partOf.x -= 112 + 85;
-      partOf.setOrigin(0.5, 1);
-      partOf.refreshBody(); // Este siempre de último
-    });
-
     // Si quiero ver en pantalla lo del json
     /*
     let y = 0;
@@ -100,8 +74,8 @@ export class GameScene extends Phaser.Scene {
     // Ponemos la `ball` con las `physics`
     this.ball =
       this.physics.add.image(400, 449, 'ball')
-        .setScale(assetsJson.symbols.scale)
-        .setOrigin(0.5, 1);
+        .setOrigin(0.5, 1)
+        .setScale(assetsJson.symbols.scale);
     // Añado a `ball` el valor de `glue`
     this.ball.glue = true;
     /* Luego de crearla le decimos que se adapte a los límites
@@ -110,8 +84,8 @@ export class GameScene extends Phaser.Scene {
     // Mostramos la `platform-normal` con physics
     this.platform =
       this.physics.add.image(400, 450, 'platform-normal')
-        .setScale(assetsJson.platforms.scale)
-        .setOrigin(0.5, 0);
+        .setOrigin(0.5, 0)
+        .setScale(assetsJson.platforms.scale);
     // Como la plataforma cae le decimos q no va a tener gravedad
     this.platform.body.allowGravity = false;
     // La velocidad(x,y) de la `ball` será aleatoria
@@ -120,6 +94,9 @@ export class GameScene extends Phaser.Scene {
     //   velocity = 0 - velocity;
     // }
     // this.ball.setVelocity(velocity, 10);
+
+    // Invoco el create del constructor de niveles
+    this.levelConstructor.create();
 
     // Colisión entre la `platform` y la `ball`
     this.physics.add.collider(this.ball, this.platform,
@@ -145,9 +122,11 @@ export class GameScene extends Phaser.Scene {
   la `ball` y la `platform` */
   platformImpact (ball, platform) {
     // Llamo la función de **Scoreboard.js**
-    this.scoreboard.addPoints(1);
-    // Pongo el sonido y doy play
-    this.sound.add('platform-impact').play();
+    if (!this.ball.glue) {
+      this.scoreboard.addPoints(1);
+      // Pongo el sonido y doy play
+      this.sound.add('platform-impact').play();
+    }
     /* Los comportamientos entre la `ball` y la `platform`
     obteniendo la posición relativa entre estos */
     const relativeImpact = ball.x - platform.x;
@@ -173,9 +152,15 @@ export class GameScene extends Phaser.Scene {
     this.sound.add('brick-impact').play();
     /* con el método `countActive` sabremos cuantos `bricks`
     nos quedan disponibles */
-    if (this.bricks.countActive() === 0) {
-      // Llamada a la escena q tiene el `congratulations`
-      this.scene.start('scene-congratulations');
+    // if (this.bricks.countActive() === 0) {
+    //   // Llamada a la escena q tiene el `congratulations`
+    //   this.scene.start('scene-congratulations');
+    // }
+    /* Verifica en el `levelConstructor` para seguir otro nivel */
+    if (this.levelConstructor.isLevelFinished()) {
+      // this.phaseChangeSample.play();
+      this.levelConstructor.nextLevel();
+      this.setInitialPlatformState();
     }
   }
 
@@ -190,7 +175,7 @@ export class GameScene extends Phaser.Scene {
 
     /* Asociamos la velocidad de la `ball` a la `platform`
     cuando la `ball` esté muy cerquita de la `platform` */
-    if (this.platform.y - this.ball.y <= 1 && this.ball.glue) {
+    if (this.platform.y - this.ball.y <= 10 && this.ball.glue) {
       this.ball.setVelocityX(this.platform.body.velocity.x);
       /* Salta la `ball` si está en contacto con la `platform` */
       if (this.cursor.space.isDown || this.cursor.up.isDown) {
@@ -210,13 +195,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   setInitialPlatformState () {
-    this.ball.setVelocity(0, 0).setOrigin(0.5, 1);
-    this.ball.x = 400;
-    this.ball.y = 445;
+    this.ball.setVelocity(0, 0)
+      .setPosition(400, 449)
+      .setOrigin(0.5, 1);
     this.ball.glue = true;
-    this.platform.setVelocity(0, 0).setOrigin(0.5, 0);
-    this.platform.x = 400;
-    this.platform.y = 450;
+    this.platform.setVelocity(0, 0)
+      .setPosition(400, 450)
+      .setOrigin(0.5, 0);
   }
 
   endGame (completed = false) {

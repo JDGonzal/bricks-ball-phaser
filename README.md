@@ -1271,3 +1271,285 @@ que pierdo vidas:
 ```js
     this.game.sound.add('livelost').play();
 ```
+
+## 13. Gestionando Niveles
+
+1. En la carpeta "src\components", creamos el archivo
+**LevelBase.js**:
+```js
+export class LevelBase {
+  constructor (game) {
+    this.game = game;
+    this.bricks = null;
+  }
+
+  /* Será llamado de cada nivel a ser utilizado */
+  configureColisions () {
+    this.game.physics.add.collider(this.game.ball, this.bricks,
+      this.game.bricksImpact, null, this.game);
+  }
+
+  /* Será llamado de cada nivel a ser utilizado */
+  isLevelFinished () {
+    return (this.bricks.countActive() === 0);
+  }
+}
+```
+2. Empezamos con el primer nivel en la carpeta 
+"src\components" , el archivo de nombre **Level01.js**, con
+la importación del `LevelBase` y `assetsJson`:
+```js
+import { LevelBase } from './LevelBase.js';
+import assetsJson from '../assets.json';
+```
+3. Creamos en **Level01.js**, la clase que se extiende de
+`LevelBase`, solo con la función `create`:
+```js
+export class Level01 extends LevelBase {
+  create () {}
+}
+```
+4. En el `create` de **Level01.js**, ponemos la primer tanda
+de `bricks` a mostrar:
+```js
+    this.bricks = this.game.physics.add.staticGroup({
+      key: ['brick-blue', 'brick-orange', 'brick-green',
+        'brick-purple', 'brick-yellow', 'brick-purple',
+        'brick-yellow', 'brick-blue', 'brick-orange',
+        'brick-green'],
+      frameQuantity: 1,
+      // scale: assetsJson.bricks.scale,
+      gridAlign: {
+        width: 5,
+        height: 4,
+        cellWidth: 150,
+        cellHeight: 100,
+        x: 40,
+        y: 20,
+      },
+    });
+    /* Añado un recorrido de los `children` del grupo de
+    nombre `bricks` para ajustar: `scale`, `size` y
+    posición `x` */
+    this.bricks.children.each(function (partOf) {
+      partOf.setScale(assetsJson.bricks.scale);
+      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+      partOf.x -= 40;
+      partOf.setOrigin(0.5, 1);
+      partOf.refreshBody(); // Este siempre de último
+    });
+```
+5. Llamamos en **Level01.js**, la función `configureColisions`
+de `LevelBase`, esto dentro del `create`:
+```js
+    this.configureColisions();
+```
+6. Creo en la carpeta "src/components" otro archivo de nivel 2
+de nombre **Level02.js**, de una vez con algo similar al de
+**level01.js**:
+```js
+import { LevelBase } from './LevelBase.js';
+import assetsJson from '../assets.json';
+
+export class Level02 extends LevelBase {
+  create () {
+    this.bricks = this.game.physics.add.staticGroup();
+
+    const scale = assetsJson.bricks.scale;
+    this.bricks.create(400, 270, 'brick-orange').setScale(scale);
+    this.bricks.create(360, 225, 'brick-orange').setScale(scale);
+    this.bricks.create(440, 225, 'brick-orange').setScale(scale);
+    this.bricks.create(480, 180, 'brick-orange').setScale(scale);
+    this.bricks.create(400, 180, 'brick-orange').setScale(scale);
+    this.bricks.create(320, 180, 'brick-orange').setScale(scale);
+    this.bricks.create(280, 135, 'brick-orange').setScale(scale);
+    this.bricks.create(360, 135, 'brick-orange').setScale(scale);
+    this.bricks.create(440, 135, 'brick-orange').setScale(scale);
+    this.bricks.create(520, 135, 'brick-orange').setScale(scale);
+    this.bricks.create(330, 90, 'brick-orange').setScale(scale);
+    this.bricks.create(470, 90, 'brick-orange').setScale(scale);
+    /* Añado un recorrido de los `children` del grupo de
+    nombre `bricks` para ajustar: `scale`, `size` y
+    posición `x` */
+    // TODO: Mover esto a una utilidad q retorne los `bricks`
+    this.bricks.children.each(function (partOf) {
+      partOf.setScale(assetsJson.bricks.scale);
+      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+      partOf.x -= 40;
+      partOf.setOrigin(0.5, 1);
+      partOf.refreshBody(); // Este siempre de último
+    });
+    /* llamamos esto de `LevelBase` */
+    this.configureColisions();
+  }
+}
+```
+
+>[!NOTE]  
+>En realidad el conjunto de acciones es exactamente el mismo, lo que 
+>cambia es cómo generamos los ladrillos en el grupo.
+
+7. Creamos en la carpeta "src/components" el archivo 
+**Level-Constructor.js**, y empezamos importando los dos primeros
+`Level`:
+```js
+import { Level01 } from './Level01';
+import { Level02 } from './Level02';
+```
+8. Creamos la clase y añadimos el constructor invocando el `game`,
+mas un arreglo de `levels`:
+```js
+export class LevelConstructor {
+  constructor (game) {
+    this.game = game;
+    /* Importo los niveles q voy a implementar
+    se ejecutan de abajo hacia arriba */
+    this.levels = [
+      Level02,
+      Level01,
+    ];
+    this.currentLevel = null;
+  }
+}
+```
+9. En la clase de **Level-Constructor.js** añado el método `create` 
+se invocará al arrancar la escena del juego (desde el método 
+`create` del juego), se encarga de coger el último nivel del array, 
+instanciarla y solicitarle que se cree el grupo de `bricks`:
+```js
+  create () {
+    /* El método pop elimina el último elemento de un array y
+     devuelve su valor al método que lo llamó */  
+    const CurrentLevelClass = this.levels.pop();
+    this.currentLevel = new CurrentLevelClass(this.game);
+    return this.currentLevel.create();
+  }
+```
+10. Añado el método `nextLevel` en **Level-Constructor.js** que se 
+encarga de verificar que existen todavía niveles en el juego. 
+Si no es así, entonces llama al método `endGame` de la escena 
+principal. Si quedaban niveles, entonces hace que se cree la 
+siguiente, mediante el método `create()`:
+```js
+  nextLevel () {
+    if (this.levels.length === 0) {
+      this.game.endGame(true);
+    } else {
+      return this.create();
+    }
+  }
+```
+11. Pongo un método llamado `isLevelFinished` en 
+**Level-Constructor.js** que permite saber si el nivel se ha 
+terminado (porque todos los `bricks` se hayan roto ya). 
+Para ello pregunta a el nivel actual si está terminada, que es 
+quien conoce al grupo de `bricks` que se está usando en ese 
+instante:
+```js
+  isLevelFinished () {
+    return this.currentLevel.isLevelFinished();
+  }
+```
+12. En el archivo **GameScene.js**, importo la clase
+`LevelConstructor`:
+```js
+import { LevelConstructor } from '../components/Level-Constructor.js';
+```
+13. En el archivo **GameScene.js**, en el método `init`, instancio
+el `LevelConstructor`:
+```js
+  this.levelConstructor = new LevelConstructor(this);
+```
+14. El `create` de **GameScene.js**, llamo el método create de
+`LevelConstructor`, lo pongo antes del primer `collider`:
+```js
+   this.levelConstructor.create();
+```
+15. El método `bricksImpact` de **GameScene.js** tiene un par de 
+novedades:  
+* Primero, la responsabilidad de saber si el nivel está 
+terminado o no ahora la tiene el constructor de niveles, invocando
+el método `isLevelFinished` de **LevelBase.js**.  
+* Además, en el caso que 
+la fase se haya terminado, tenemos que pedirte al `LevelConstructor` 
+que pase al siguiente nivel, con el método `nextLevel` de
+**Level-Constructor.js**:
+```js
+  bricksImpact (ball, brick) {
+    // Desaparecemos el ladrillo q fué impactado
+    brick.disableBody(true, true);
+    // Llamo la función de **Scoreboard.js**
+    this.scoreboard.addPoints(10);
+    // Pongo el sonido y doy play
+    this.sound.add('brick-impact').play();
+    /* con el método `countActive` sabremos cuantos `bricks`
+    nos quedan disponibles */
+    // if (this.bricks.countActive() === 0) {
+    //   // Llamada a la escena q tiene el `congratulations`
+    //   this.scene.start('scene-congratulations');
+    // }
+    /* Verifica en el `levelConstructor` para seguir otro nivel */
+    if (this.levelConstructor.isLevelFinished()) {
+      // this.phaseChangeSample.play();
+      this.levelConstructor.nextLevel();
+      this.setInitialPlatformState();
+    }
+  }
+```
+16. Se debe eliminar de **GameScene.js**, la creación de `bricks`
+pues esto ya está en manos de cada archivo **LevelXX.js**.
+17. Borramos la constante de nombre `BRICKS_BY_COLOR` en
+**GameScene.js**.
+
+>[!CAUTION]  
+>Hay un comportamiento raro a la hora de ejecutar el método
+>`setInitialPlatformState`. Cuando es llamado con la condicional: 
+>`if (this.ball.y >= 500 + this.ball.body.height && !this.ball.glue)`, 
+>la posición de la `ball` hace intersección con la `platform`
+>es decir se pone una dentro de la otra.
+>
+>Pero cuando es llamada para pasar de nivel, la `ball` aparece
+>muy arriba de la `platform`. 
+
+>[!TIP]  
+>Dado que en cada archivo **LevelXX.js**, se ajustan los `bricks`
+>en `scale`, `size` y posición `x`, Necesitamos un ente externo
+>para no repetir lo mismo en cada archivo. Pasos: 
+>1. Creamos en la carpeta 
+>"src/components", el archivo **StaticGroupUtils.js**, con al 
+>menos la exportación de una `class` y el `constructor`:
+>```js
+>export class StaticGroupUtils {
+>  constructor (game) {
+>    this.game = game;
+>  }
+>}
+>```
+>2. Luego la función que usaremos para el proceso `fixStaticGroup`:
+>```js
+> fixStaticGroup (scale = 1, deltaX = 0, deltaY = 0) {
+>    this.game.bricks.children.each(function (partOf) {
+>      partOf.setScale(scale);
+>      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+>      partOf.x += deltaX;
+>      partOf.y += deltaY;
+>      partOf.setOrigin(0.5, 1);
+>      partOf.refreshBody(); // Este siempre de último
+>    });
+>  }
+>```
+>3. En cada Archivo **LevelXX.js** impotamos el `StaticGroupUtils`:
+>```js
+>import { StaticGroupUtils } from './StaticGroupUtils.js';
+>```
+>4. En cada Archivo **LevelXX.js**, justo despúes del nombre 
+>del método `create` instanciamos `StaticGroupUtils`:
+>```js
+>    this.staticGroupUtils = new StaticGroupUtils(this);
+>```
+>5. Por último llamamos el método `fixStaticGroup`, con algunos
+>parámetros:
+>```js
+>    this.staticGroupUtils.fixStaticGroup(
+>      assetsJson.bricks.scale, -40);
+>```
