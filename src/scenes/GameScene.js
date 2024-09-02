@@ -45,6 +45,10 @@ export class GameScene extends Phaser.Scene {
       './assets/sounds/brick-impact.ogg');
     this.load.audio('livelost',
       './assets/sounds/live-lost.ogg');
+    this.load.audio('level-change',
+      './assets/sounds/phasechange.ogg');
+    this.load.audio('unbreakable-impact',
+      './assets/sounds/fixed-brick-impact.ogg');
   }
 
   create () {
@@ -150,18 +154,17 @@ export class GameScene extends Phaser.Scene {
     this.scoreboard.addPoints(10);
     // Pongo el sonido y doy play
     this.sound.add('brick-impact').play();
-    /* con el método `countActive` sabremos cuantos `bricks`
-    nos quedan disponibles */
-    // if (this.bricks.countActive() === 0) {
-    //   // Llamada a la escena q tiene el `congratulations`
-    //   this.scene.start('scene-congratulations');
-    // }
     /* Verifica en el `levelConstructor` para seguir otro nivel */
     if (this.levelConstructor.isLevelFinished()) {
-      // this.phaseChangeSample.play();
+      this.sound.add('level-change').play();
       this.levelConstructor.nextLevel();
       this.setInitialPlatformState();
     }
+  }
+
+  /* Esto es llamado de **LevelXX.js** */
+  unbreakableBricksImpact (ball, unbreakableBricks) {
+    this.sound.add('unbreakable-impact').play();
   }
 
   update () {

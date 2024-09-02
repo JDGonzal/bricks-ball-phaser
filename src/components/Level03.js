@@ -2,7 +2,7 @@ import { LevelBase } from './LevelBase.js';
 import assetsJson from '../assets.json';
 import { StaticGroupUtils } from './StaticGroupUtils.js';
 
-export class Level01 extends LevelBase {
+export class Level03 extends LevelBase {
   create () {
     // Creamos el `staticGroup` y ponemos los `bricks`
     this.bricks = this.game.physics.add.staticGroup({
@@ -28,7 +28,20 @@ export class Level01 extends LevelBase {
     this.fixBricks.fixStaticGroup(
       assetsJson.bricks.scale, -120);
 
+    // Se crea otro `staticGroup`
+    this.unbreakableBricks = this.game.physics.add.staticGroup();
+    this.unbreakableBricks.create(316, 165, 'brick-gray');
+    this.unbreakableBricks.create(466, 165, 'brick-gray');
+
+    // Instanciamos `StaticGroupUtils`
+    this.fixUnbreakableBricks =
+      new StaticGroupUtils(this.unbreakableBricks);
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixUnbreakableBricks.fixStaticGroup(
+      assetsJson.bricks.scale, 20, -30);
+
     /* llamamos esto de `LevelBase` */
     this.configureColisions();
+    this.configureColisionsUnbreakable();
   }
 }

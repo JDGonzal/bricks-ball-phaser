@@ -1553,3 +1553,227 @@ pues esto ya está en manos de cada archivo **LevelXX.js**.
 >    this.staticGroupUtils.fixStaticGroup(
 >      assetsJson.bricks.scale, -40);
 >```
+
+## 14. Crear unos `bricks` indestructibles
+
+1. Creamos el archivo **Level03.js** en la carpeta "src/components" 
+similar a los otros, pero con un `staticGroup` adicional:
+```js
+import { LevelBase } from './LevelBase.js';
+import assetsJson from '../assets.json';
+import { StaticGroupUtils } from './StaticGroupUtils.js';
+
+export class Level03 extends LevelBase {
+  create () {
+    // Instanciamos `StaticGroupUtils`
+    this.staticGroupUtils = new StaticGroupUtils(this);
+
+    // Creamos el `staticGroup` y ponemos los `bricks`
+    this.bricks = this.game.physics.add.staticGroup({
+      key: ['brick-blue', 'brick-orange', 'brick-green',
+        'brick-purple', 'brick-yellow', 'brick-purple',
+        'brick-yellow', 'brick-blue', 'brick-orange',
+        'brick-green'],
+      frameQuantity: 1,
+      // scale: assetsJson.bricks.scale,
+      gridAlign: {
+        width: 5,
+        height: 4,
+        cellWidth: 150,
+        cellHeight: 100,
+        x: 40,
+        y: 20,
+      },
+    });
+
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.staticGroupUtils.fixStaticGroup(
+      assetsJson.bricks.scale, -120);
+
+    // Se crea otro `staticGroup`
+    this.unbreakableBricks = this.game.physics.add.staticGroup();
+    this.unbreakableBricks.create(316, 165, 'brick-gray');
+    this.unbreakableBricks.create(466, 165, 'brick-gray');
+
+    /* llamamos esto de `LevelBase` */
+    this.configureColisions();
+  }
+}
+```
+2. En el archivo **Level-Constructor.js**, añadimos la importación
+del nuevo nivel y lo ponemos de último (se verá de primero) en el 
+arreglo:
+```js
+...
+import { Level03 } from './Level03';
+
+export class LevelConstructor {
+  constructor (game) {
+    this.game = game;
+    this.levels = [
+      Level02,
+      Level01,
+      Level03,
+    ];
+    this.currentLevel = null;
+  }
+  ...
+}
+```
+>[!TIP]  
+>Como hay un nuevo `staticGroup`, debo hacer mas genérico el 
+>método `fixStaticGroup` de **StaticGroupUtils.js**:
+>1. En el **StaticGroupUtils.js**, recibimos en el `constructo`
+>directamente el `bricksGroup` y en el proceso recorremos, este
+>nuevo elemento:
+>```js
+>export class StaticGroupUtils {
+>  constructor (bricksGroup) {
+>    this.bricksGroup = bricksGroup;
+>  }
+>
+>  /* Añado un recorrido de los `children` del grupo de nombre
+>  `bricks` para ajustar: `scale`, `size` y posición `x` */
+>  fixStaticGroup (scale = 1, deltaX = 0, deltaY = 0) {
+>    this.bricksGroup.children.each(function (partOf) {
+>      partOf.setScale(scale);
+>      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
+>      partOf.x += deltaX;
+>      partOf.y += deltaY;
+>      partOf.setOrigin(0.5, 1);
+>      partOf.refreshBody(); // Este siempre de último
+>    });
+>  }
+>}
+>```
+>2. En cada archivo **LevelXX.js**, al momento de instanciar el
+>`StaticGroupUtils`, no envio solo `this`, sino el `this.bricks`,
+>pero luego de haber creado los `bricks` o los `unbreakableBricks`,
+>y el nombre de la instancia va acorde al `bricks` o al 
+>`unbreakableBricks`, ejemplo en el nuevo **Level03.js**:
+>```js
+>import { LevelBase } from './LevelBase.js';
+>import assetsJson from '../assets.json';
+>import { StaticGroupUtils } from './StaticGroupUtils.js';
+>
+>export class Level03 extends LevelBase {
+>  create () {
+>    // Creamos el `staticGroup` y ponemos los `bricks`
+>    this.bricks = this.game.physics.add.staticGroup({
+>      key: ['brick-blue', 'brick-orange', 'brick-green',
+>        'brick-purple', 'brick-yellow', 'brick-purple',
+>        'brick-yellow', 'brick-blue', 'brick-orange',
+>        'brick-green'],
+>      frameQuantity: 1,
+>      // scale: assetsJson.bricks.scale,
+>      gridAlign: {
+>        width: 5,
+>        height: 4,
+>        cellWidth: 150,
+>        cellHeight: 100,
+>        x: 40,
+>        y: 20,
+>      },
+>    });
+>
+>    // Instanciamos `StaticGroupUtils`
+>    this.fixBricks = new StaticGroupUtils(this.bricks);
+>    // se hace el fix de los `bricks` del `staticGroup`
+>    this.fixBricks.fixStaticGroup(
+>      assetsJson.bricks.scale, -120);
+>
+>    // Se crea otro `staticGroup`
+>    this.unbreakableBricks = this.game.physics.add.staticGroup();
+>    this.unbreakableBricks.create(316, 165, 'brick-gray');
+>    this.unbreakableBricks.create(466, 165, 'brick-gray');
+>
+>    // Instanciamos `StaticGroupUtils`
+>    this.fixUnbreakableBricks =
+>      new StaticGroupUtils(this.unbreakableBricks);
+>    // se hace el fix de los `bricks` del `staticGroup`
+>    this.fixUnbreakableBricks.fixStaticGroup(
+>      assetsJson.bricks.scale, 20, -30);
+>
+>    /* llamamos esto de `LevelBase` */
+>    this.configureColisions();
+>  }
+>}
+>```
+>3. Apligar algo similar a los otros **LevelXX.js**
+3. En el Archivo **LevelBase.js**, agrego dos métodos:
+`configureColisionsUnbreakable` y `deleteUnbreakableBricks`,
+lo añadimos encima de `isLevelFinished`:
+```js
+  /* Para los ladrillo irrompibles */
+  configureColisionsUnbreakable () {
+    this.game.physics.add.collider(this.game.ball,
+      this.unbreakableBricks, this.game.unbreakableBricksImpact,
+      null, this.game);
+  }
+
+  /* Deben ser borrados para limpiar la escena */
+  deleteUnbreakableBricks () {
+    if (this.unbreakableBricks) {
+      this.unbreakableBricks.getChildren().forEach(item => {
+        item.disableBody(true, true);
+      });
+    }
+  }
+```
+4. En **Level03.js** llamo el método
+`configureColisionsUnbreakable`, debajo de `configureColisions`:
+```js
+    this.configureColisionsUnbreakable();
+```
+5. El método `deleteFixedBricks` se necesita porque, al pasar de
+un nivel al otro, se deben borrar los bloques fijos (irrompibles),
+ porque si no, permanecerían al entrar en los próximos niveles.  
+Por tanto, el código para pasar de un nivel a otro, que tenemos en
+la clase `LevelConstructor`, también tiene una pequeña diferencia:
+```js
+  nextLevel () {
+    this.currentLevel.deleteUnbreakableBricks();
+    if (this.levels.length === 0) {
+      this.game.endGame(true);
+    } else {
+      return this.create();
+    }
+  }
+```
+6. Precargo dos sonidos nuevos en el `preload` de **GameScene.js**:
+```js
+    this.load.audio('level-change',
+      './assets/sounds/phasechange.ogg');
+    this.load.audio('unbreakable-impact',
+      './assets/sounds/fixed-brick-impact.ogg');
+```
+7. Añado un método `unbreakableBricksImpact` debajo de 
+`bricksImpact` en **GameScene.js**, con el sonido 
+`'unbreakable-impact'`:
+```js
+  unbreakableBricksImpact (ball, unbreakableBricks) {
+    this.sound.add('unbreakable-impact').play();
+  }
+```
+8. En el archivo **GameScene.js**, en la condicional del método
+`bricksImpact`, llamo el sonido de `'level-change'`:
+```js
+  bricksImpact (ball, brick) {
+    brick.disableBody(true, true);
+    this.scoreboard.addPoints(10);
+    this.sound.add('brick-impact').play();
+    if (this.levelConstructor.isLevelFinished()) {
+      this.sound.add('level-change').play();
+      this.levelConstructor.nextLevel();
+      this.setInitialPlatformState();
+    }
+  }
+```
+9. En el archivo **Level-Constructor.js**, reorganizo el arreglo:
+```js
+    this.levels = [
+      Level03,
+      Level02,
+      Level01,
+    ];
+```

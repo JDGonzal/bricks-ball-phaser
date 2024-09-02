@@ -1,5 +1,6 @@
 import { Level01 } from './Level01';
 import { Level02 } from './Level02';
+import { Level03 } from './Level03';
 
 export class LevelConstructor {
   constructor (game) {
@@ -7,6 +8,7 @@ export class LevelConstructor {
     /* Importo los niveles q voy a implementar
     se ejecutan de abajo hacia arriba */
     this.levels = [
+      Level03,
       Level02,
       Level01,
     ];
@@ -27,6 +29,7 @@ export class LevelConstructor {
   }
 
   nextLevel () {
+    this.currentLevel.deleteUnbreakableBricks();
     if (this.levels.length === 0) {
       this.game.endGame(true);
     } else {
