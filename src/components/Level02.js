@@ -4,9 +4,6 @@ import { StaticGroupUtils } from './StaticGroupUtils.js';
 
 export class Level02 extends LevelBase {
   create () {
-    // Instanciamos `StaticGroupUtils`
-    this.staticGroupUtils = new StaticGroupUtils(this);
-
     // Creamos el `staticGroup` y ponemos los `bricks`
     this.bricks = this.game.physics.add.staticGroup();
     this.bricks.create(400, 270, 'brick-orange');
@@ -22,8 +19,10 @@ export class Level02 extends LevelBase {
     this.bricks.create(330, 90, 'brick-orange');
     this.bricks.create(470, 90, 'brick-orange');
 
+    // Instanciamos `StaticGroupUtils`
+    this.fixBricks = new StaticGroupUtils(this.bricks);
     // se hace el fix de los `bricks` del `staticGroup`
-    this.staticGroupUtils.fixStaticGroup(
+    this.fixBricks.fixStaticGroup(
       assetsJson.bricks.scale);
 
     /* llamamos esto de `LevelBase` */
