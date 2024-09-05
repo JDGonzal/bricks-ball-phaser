@@ -1777,3 +1777,44 @@ la clase `LevelConstructor`, también tiene una pequeña diferencia:
       Level01,
     ];
 ```
+
+# 15. Animaciones con sprites en Phaser
+>[!TIP]  
+>Lo primero es descargar los archivos de imágenes:
+>* **blue_diamond-sprites.png**
+>* **green_diamond-sprites.png**
+>* **red_diamond-sprites.png**
+>
+>Directamente de [master/src/images](https://github.com/deswebcom/ball-game-phaser/tree/master/src/images).  
+>Para ponerlos en la ruta: "src/public/assets/images".
+
+1. En el achivo **GamesScene.js**, ponemos en `preload` nuestro
+primer `spritesheet`:
+```js
+    this.load.spritesheet('bluediamond',
+      './assets/images/blue_diamond-sprites.png',
+      { frameWidth: 48, frameHeight: 48 },
+      // * Importante: Cuanto mide cada `frame`
+    );
+```
+2. Agregamos el `sprite` en vez de una `image` en el `create` de
+**GameScene.js**, lo porngo debajo de `this.cursor =`:
+```js
+    this.diamondBlue = this.add.sprite(40, 40, 'bluediamond');
+```
+3. Defino la animación como se va a mover y cuantas repetidiones:
+```js
+    this.anims.create({
+      key: 'bluediamond-animation',
+      frames: this.anims
+        .generateFrameNumbers('bluediamond',
+          { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
+```
+4. Por último activo la animación:
+```js
+    this.diamondBlue.anims.play('bluediamond-animation');
+```

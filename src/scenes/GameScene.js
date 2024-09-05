@@ -18,6 +18,7 @@ export class GameScene extends Phaser.Scene {
     this.bricks = null;
     this.liveCounter = null;
     this.levelConstructor = null;
+    this.diamondBlue = null;
   }
 
   /* Valores que puedo inicializar */
@@ -34,11 +35,13 @@ export class GameScene extends Phaser.Scene {
     /* Precargamos los archivos de imagenes */
     this.load.image('background', './assets/images/background.png');
 
+    // Images
     preloadFromJson(this, assetsJson.bricks);
     preloadFromJson(this, assetsJson.boxes);
     preloadFromJson(this, assetsJson.platforms);
     preloadFromJson(this, assetsJson.symbols);
 
+    // Audios - Sounds
     this.load.audio('platform-impact',
       './assets/sounds/platform-impact.ogg');
     this.load.audio('brick-impact',
@@ -49,6 +52,13 @@ export class GameScene extends Phaser.Scene {
       './assets/sounds/phasechange.ogg');
     this.load.audio('unbreakable-impact',
       './assets/sounds/fixed-brick-impact.ogg');
+
+    // Sprites
+    this.load.spritesheet('bluediamond',
+      './assets/images/blue_diamond-sprites.png',
+      { frameWidth: 48, frameHeight: 48 },
+      // * Importante: Cuanto mide cada `frame`
+    );
   }
 
   create () {
@@ -120,6 +130,21 @@ export class GameScene extends Phaser.Scene {
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
+
+    // Añado el `sprite`
+    this.diamondBlue = this.add.sprite(40, 40, 'bluediamond');
+    // Pongo la animación del `sprite`
+    this.anims.create({
+      key: 'bluediamond-animation',
+      frames: this.anims
+        .generateFrameNumbers('bluediamond',
+          { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
+    // Activo la animación
+    this.diamondBlue.anims.play('bluediamond-animation');
   }
 
   /* Método para cuando se hace la colisión entre
