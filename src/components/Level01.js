@@ -1,6 +1,7 @@
 import { LevelBase } from './LevelBase.js';
 import assetsJson from '../assets.json';
 import { StaticGroupUtils } from './StaticGroupUtils.js';
+import { LivePower } from './powers/Live-Power.js';
 
 export class Level01 extends LevelBase {
   create () {
@@ -30,5 +31,10 @@ export class Level01 extends LevelBase {
 
     /* llamamos esto de `LevelBase` */
     this.configureColisions();
+
+    // Invocamos Powers en los `bricks` 3, 4, y 5
+    this.powers[3] = new LivePower(this.game);
+    this.powers[4] = new LivePower(this.game);
+    this.powers[5] = new LivePower(this.game);
   }
 }

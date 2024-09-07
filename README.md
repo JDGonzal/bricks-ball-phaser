@@ -1778,7 +1778,7 @@ la clase `LevelConstructor`, también tiene una pequeña diferencia:
     ];
 ```
 
-# 15. Animaciones con sprites en Phaser
+## 15. Animaciones con sprites en Phaser
 >[!TIP]  
 >Lo primero es descargar los archivos de imágenes:
 >* **blue_diamond-sprites.png**
@@ -1818,3 +1818,201 @@ primer `spritesheet`:
 ```js
     this.diamondBlue.anims.play('bluediamond-animation');
 ```
+
+## 16. Componente Diamonds
+1. Quitemos lo último de **GameScene.js** en el método `create`
+relacionado con el `diamondBlue`:
+```js
+    // // Añado el `sprite`
+    // this.diamondBlue = this.physics.add
+    //   .sprite(40, 40, 'bluediamond');
+    // // Pongo la animación del `sprite`
+    // this.anims.create({
+    //   key: 'bluediamond-animation',
+    //   frames: this.anims
+    //     .generateFrameNumbers('bluediamond',
+    //       { start: 0, end: 7 }),
+    //   frameRate: 10,
+    //   repeat: -1,
+    //   yoyo: true,
+    // });
+    // // Activo la animación
+    // this.diamondBlue.anims.play('bluediamond-animation');
+
+    // // Colisión entre la `ball` y `diamondBlue`
+    // this.physics.add.collider(this.ball, this.diamondBlue);
+```
+2. Creamos el archivo **Diamonds.js** en la carpeta 
+"src/components", le ponemos el export de la `class`, un 
+`constructor` que recibe `game` y la asignación de esta a trauna variable de tipo `this`:
+```js
+export class Diamonds {
+  constructor (game) {
+    this.game = game;
+  }
+}
+```
+3. Añadimos dos métodos: `create` y `ballImpact`.
+4. En el constructor definimos una variable `diamonds` y le
+asignamos un grupo:
+```js
+    this.diamonds = this.game.physics.add.group();
+```
+5. Creamos una colisión entre la `ball` y el grupo `diamonds`, en
+el archivo **Diamonds.js**:
+```js
+    this.game.physics.add.collider(this.game.ball,
+      this.diamonds, this.ballImpact, null, this);
+```
+6. El `create` debe recibir cuatro parámetros: `x`, `y`, `sprite`,
+`relatedPower` y con base en el grupo `diamonds` creamos un
+diamante y le asignamos el `relatedPower`:
+```js
+  create (x, y, sprite, relatedPower) {
+    // Creamos un `diamond` del grupo `diamonds`
+    const diamond = this.diamonds.create(x, y, sprite);
+    // asignamos el `relatedPower`
+    diamond.relatedPower = relatedPower;
+  }
+```
+7. Importamos el elemento `Math` de `paser` en **Diamonds.js**
+```js
+import { Math } from 'phaser';
+```
+8. Definimos otros elementos del `diamond`:
+```js
+    diamond.setScale(0.6);
+    diamond.anims.play(sprite + '-animation');
+    diamond.body.setAllowRotation();
+    diamond.body.setAngularVelocity(100);
+    diamond.body.setVelocity(Math.Between(-100, 100),
+      Math.Between(-100, 100));
+    diamond.setBounce(1);
+    diamond.setCollideWorldBounds(true);
+```
+9. El método `ballImpact`, recibe dos parámetros: `ball` y
+`diamond`.
+10. Añadimos en el `ballImpact` al menos la destrucción del
+`diamond`: `diamond.destroy();`
+11. Creamos una carpeta llamada "powers" en la carpeta
+"src/components" y allí creamos los archivos **PowerBase.js** 
+y **Live-Power.js**, ambos con la `export class` y un constructor 
+con el parametro `(game)`:
+* **PowerBase.js** 
+```js
+export class PowerBase {
+  constructor (game) {
+    this.game = game;
+  }
+}
+```
+* **Live-Power.js**
+```js
+export class LivePower {
+  constructor (game) {
+    this.game = game;
+  }
+}
+```
+12. En el archivo **PowerBase.js**, importamos `Diamonds`:
+```js
+import { Diamonds } from '../Diamonds.js';
+```
+13. En el `constructor` de **PowerBase.js**, añadimos un parámetro
+de nombre `powerSprite` y lo asignamos:
+```js
+  constructor (game, powerSprite) {
+    this.game = game;
+    this.powerSprite = powerSprite;
+  }
+```
+14. En **PowerBase.js**, ponemos el método `create`, instanciamos
+`Diamonds`, e invocamos el `create` de esa clase:
+```js
+  create (x, y) {
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    // Llamamos el método `create`
+    this.diamonds.create(x, y, this.powerSprite);
+  }
+```
+15. En el archivo **Live-Power.js**, importamos el
+`PowerBase`, la clase la extendemos de `PowerBase` y el constructor
+invocamos el `super` con el nombre del `sprite`:
+```js
+import { PowerBase } from './PowerBase.js';
+
+export class LivePower extends PowerBase {
+  constructor (game) {
+    super(game, 'bluediamond');
+  }
+}
+```
+16. En el archivo **LevelBase.js**, en el `constructor` definimos
+un arreglo de nombre `powers`:
+```js
+    this.powers = [];
+```
+17. En el archivo **LevelBase.js**, creamos dos métodos de nombres
+`getBrickIndex` y `brickImpact`:
+```js
+  /* Consigue el número del índice para usarlo en `brickImpact`  */
+  getBrickIndex (brick) {
+    const children = this.bricks.getChildren();
+    for (const i in children) {
+      if (children[i] === brick) {
+        return i;
+      }
+    }
+  }
+
+  /* Llamamos luego el `bricksImpact` de **GameScene.js** */
+  brickImpact (ball, brick) {
+    const brickIndex = this.getBrickIndex(brick);
+    console.log('el index es', brickIndex);
+    if (this.powers[brickIndex]) {
+      console.log('tengo un poder en ', brickIndex);
+      this.powers[brickIndex].create(ball.x, ball.y);
+    }
+    this.game.bricksImpact(ball, brick);
+  }
+```
+18. En el archivo **LevelBase.js** el método `configureColisions`
+el `brickImpact` es ya local no de **GameScene.js**:
+```js
+  configureColisions () {
+    this.game.physics.add.collider(this.game.ball, this.bricks,
+      this.brickImpact, null, this);
+  }
+```
+19. En el archivo **Level01.js**, importamos la clase `LivePower`:
+```js
+import { LivePower } from './powers/Live-Power.js';
+```
+20. Invocamos `LivePower` en los `bricks` 3, 4, y 5, en el archivo **Level01.js**, al final del `create`:
+```js
+    // Invocamos Powers en los `bricks` 3, 4, y 5
+    this.powers[3] = new LivePower(this.game);
+    this.powers[4] = new LivePower(this.game);
+    this.powers[5] = new LivePower(this.game);
+```
+21. Agregamos mas efectos en el `ballImpact` de el archivo 
+**Diamonds.js**, dado que el impacto con la `ball` hará que el 
+`diamond` desaparezca y dará el poder al jugador. Para evitar que 
+la `ball` se frene con el impacto, la `ball` tenga siempre una
+ velocidad vertical de 300, con un condicional:
+```js
+    // Evitamos que se pegue
+    ball.glue = false;
+    /* Para evitar que la `ball` se frene con el impacto,
+    la `ball` tenga siempre una velocidad vertical de 300 */
+    const currentVelocity = ball.body.velocity;
+    if (currentVelocity.y > 0) {
+      ball.body.setVelocityY(300);
+    } else {
+      ball.body.setVelocityY(-300);
+    }
+```
+>[!TIP]  
+>En **GameScene.js** para el método `platformImpact` si está en
+>estado `glue`, simplemente se sale con un `return`.

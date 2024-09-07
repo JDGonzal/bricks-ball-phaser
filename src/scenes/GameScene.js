@@ -130,32 +130,17 @@ export class GameScene extends Phaser.Scene {
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
-
-    // Añado el `sprite`
-    this.diamondBlue = this.add.sprite(40, 40, 'bluediamond');
-    // Pongo la animación del `sprite`
-    this.anims.create({
-      key: 'bluediamond-animation',
-      frames: this.anims
-        .generateFrameNumbers('bluediamond',
-          { start: 0, end: 7 }),
-      frameRate: 10,
-      repeat: -1,
-      yoyo: true,
-    });
-    // Activo la animación
-    this.diamondBlue.anims.play('bluediamond-animation');
   }
 
   /* Método para cuando se hace la colisión entre
   la `ball` y la `platform` */
   platformImpact (ball, platform) {
+    // Si esta en estado `glue` simplemente se sale
+    if (this.ball.glue) return;
     // Llamo la función de **Scoreboard.js**
-    if (!this.ball.glue) {
-      this.scoreboard.addPoints(1);
-      // Pongo el sonido y doy play
-      this.sound.add('platform-impact').play();
-    }
+    this.scoreboard.addPoints(1);
+    // Pongo el sonido y doy play
+    this.sound.add('platform-impact').play();
     /* Los comportamientos entre la `ball` y la `platform`
     obteniendo la posición relativa entre estos */
     const relativeImpact = ball.x - platform.x;
