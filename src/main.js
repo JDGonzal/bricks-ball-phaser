@@ -1,5 +1,6 @@
 import './style.css';
 import Phaser from 'phaser';
+import { PreloadScene } from './scenes/PreloadScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { CongratulationsScene } from './scenes/CongratulationsScene.js';
@@ -9,7 +10,8 @@ const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 500,
-  scene: [GameScene, GameOverScene, CongratulationsScene],
+  scene: [PreloadScene, GameScene, GameOverScene,
+    CongratulationsScene],
   physics: {
     default: 'arcade',
     arcade: {

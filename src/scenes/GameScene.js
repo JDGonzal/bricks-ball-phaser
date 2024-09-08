@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import assetsJson from '../assets.json'; // assert { type: 'json' };
 import { Scoreboard } from '../components/Scoreboard.js';
-import { preloadFromJson /*, createFromJson */ } from '../components/jsonUtils.js';
+
 import { LiveCounter } from '../components/LiveCounter.js';
 import { LevelConstructor } from '../components/Level-Constructor.js';
 
@@ -29,36 +29,6 @@ export class GameScene extends Phaser.Scene {
     this.scoreboard = new Scoreboard(this);
     // instancio el `LiveCounter`
     this.liveCounter = new LiveCounter(this, 3);
-  }
-
-  preload () {
-    /* Precargamos los archivos de imagenes */
-    this.load.image('background', './assets/images/background.png');
-
-    // Images
-    preloadFromJson(this, assetsJson.bricks);
-    preloadFromJson(this, assetsJson.boxes);
-    preloadFromJson(this, assetsJson.platforms);
-    preloadFromJson(this, assetsJson.symbols);
-
-    // Audios - Sounds
-    this.load.audio('platform-impact',
-      './assets/sounds/platform-impact.ogg');
-    this.load.audio('brick-impact',
-      './assets/sounds/brick-impact.ogg');
-    this.load.audio('livelost',
-      './assets/sounds/live-lost.ogg');
-    this.load.audio('level-change',
-      './assets/sounds/phasechange.ogg');
-    this.load.audio('unbreakable-impact',
-      './assets/sounds/fixed-brick-impact.ogg');
-
-    // Sprites
-    this.load.spritesheet('bluediamond',
-      './assets/images/blue_diamond-sprites.png',
-      { frameWidth: 48, frameHeight: 48 },
-      // * Importante: Cuanto mide cada `frame`
-    );
   }
 
   create () {
