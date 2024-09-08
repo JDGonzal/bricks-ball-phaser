@@ -2016,3 +2016,116 @@ la `ball` se frene con el impacto, la `ball` tenga siempre una
 >[!TIP]  
 >En **GameScene.js** para el método `platformImpact` si está en
 >estado `glue`, simplemente se sale con un `return`.
+
+## 17. Escena `PreloadScene` que precarga algunos elementos
+
+1. Creamos en la carpeta "src/scenes", un archivo que contendrá
+todo el `preload` o precarga, reququerida a lo largo del juego
+con el nombre **PreloadScene.js**, iniciando con la exportación
+de la `class PreloadScene`, y dos métodos el `constructor` y
+el `preload`:
+```js
+export class PreloadScene {
+  constructor () {}
+
+  preload () {}
+}
+```
+2. En el archivo **PreloadScene.js**, importamos el `Phaser` y la 
+class que se exporta se extiende de `Phaser.Scene`, así mismo 
+en el `constructor` usamos un `super` con el `key` definido como 
+`'scene-preload'`:
+```js
+import Phaser from 'phaser';
+
+export class PreloadScene extends Phaser.Scene {
+  constructor () {
+    super({ key: 'scene-preload' });
+  }
+
+  preload () {}
+}
+```
+3. En el archivo **main.js**, importamos del nuevo archivo la 
+clase `PreloadScene` y lo ponemos debajo de `import Phaser...`:
+```js
+import { PreloadScene } from './scenes/PreloadScene.js';
+``` 
+4. En el mismo **main.js**, lo añadimos de primero en el arreglo
+de nombre `scene:` de la variable `config`:
+```js
+const config = {
+...
+  scene: [PreloadScene, GameScene, GameOverScene,
+    CongratulationsScene],
+...
+};
+```
+5. Empezamos a pasar todo del `preload` de **GameScene.js** al nuevo
+`preload` de **PreloadScene.js**:
+```js
+  preload () {
+    /* Precargamos los archivos de imagenes */
+    this.load.image('background', './assets/images/background.png');
+
+    // Images
+    preloadFromJson(this, assetsJson.bricks);
+    preloadFromJson(this, assetsJson.boxes);
+    preloadFromJson(this, assetsJson.platforms);
+    preloadFromJson(this, assetsJson.symbols);
+
+    // Audios - Sounds
+    this.load.audio('platform-impact',
+      './assets/sounds/platform-impact.ogg');
+    this.load.audio('brick-impact',
+      './assets/sounds/brick-impact.ogg');
+    this.load.audio('livelost',
+      './assets/sounds/live-lost.ogg');
+    this.load.audio('level-change',
+      './assets/sounds/phasechange.ogg');
+    this.load.audio('unbreakable-impact',
+      './assets/sounds/fixed-brick-impact.ogg');
+
+    // Sprites
+    this.load.spritesheet('bluediamond',
+      './assets/images/blue_diamond-sprites.png',
+      { frameWidth: 48, frameHeight: 48 },
+      // * Importante: Cuanto mide cada `frame`
+    );
+  }
+```
+### En el archivo **GameScene.js** desaparece el método `preload`
+6. En el archivo **PreloadScene.js**, añadimos las importaciones 
+faltantes:
+```js
+import assetsJson from '../assets.json';
+import { preloadFromJson /*, createFromJson */ } from
+  '../components/jsonUtils.js';
+```
+7. Como es una nueva escena requerimos una imagen de fondo,
+un botón para iniciar el juego y un sonido, en el `preload` 
+del archivo **PreloadScene.js**:
+```js
+    this.load.image('background-preload',
+      './assets/images/background-preload.png');
+    this.load.spritesheet('play-button',
+      './assets/images/playbutton.png', {
+        frameWidth: 190,
+        frameHeight: 49,
+      });
+    this.load.audio('breakout-start',
+      './assets/sounds/breakout.mp3');
+```
+8. Mostremos en pantalla al menos el nuevo fondo y el botón, con un nuevo método llamado `create` en el archivo **PreloadScene.js**:
+```js
+  create () {
+    this.add.image(400, 250, 'background-preload');
+    this.playButton = this.add.sprite(400, 400, 'play-button')
+      .setInteractive();
+  }
+```
+
+>[!CAUTION]  
+>En lo siguiente paso damos uso al botón 
+>![Play-button](/src/public/assets/images/playbutton.png)
+ 
