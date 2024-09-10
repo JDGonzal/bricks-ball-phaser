@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { RestartButton } from '../components/RestartButton';
+import { RestartButton } from '../components/Button-Restart.js';
 
 /* Se exporta la clase a usar de la Escena */
 export class GameOverScene extends Phaser.Scene {
@@ -9,17 +9,6 @@ export class GameOverScene extends Phaser.Scene {
     // Instancio el RestartButton
     this.restartButton = new RestartButton(this);
     this.gameover = null;
-  }
-
-  preload () {
-    // Lo moví de **GameScene.js**
-    this.load.image('gameover',
-      './assets/images/gameover.png');
-    // llamo el método `preload` de `RestartButton`
-    this.restartButton.preload();
-    // Precargamos el audio de `gameover`
-    this.load.audio('gameover',
-      './assets/sounds/gameover.ogg');
   }
 
   create () {

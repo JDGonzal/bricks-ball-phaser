@@ -2126,6 +2126,204 @@ del archivo **PreloadScene.js**:
 ```
 
 >[!CAUTION]  
->En lo siguiente paso damos uso al botón 
+>En el siguiente paso damos uso al botón 
 >![Play-button](/src/public/assets/images/playbutton.png)
- 
+
+## 18. Componentes `PlayButton`, `RestartButton` y `Button`
+
+1. Remombramos **RestartButton.js** por **Button-Restart.js**.
+2. Corregir las importaciones en **GameOverScene.js** y 
+**CongatulationsScene.js**.
+3. Creamos en la carpeta "src\components" el archivo **Button.js**
+con el `constructor` y un método `create`:
+```js
+export class Button {
+  constructor () {}
+
+  create () {}
+}
+```
+4. Movemos del **Button-Restart.js** todo el método `create` y lo
+ponemos en el archivo **ButtonBase.js**
+5. En el archivo **ButtonBase.js**, ponemos de parámetros del 
+`constructor` el `game`, `image` y las posiciones `x` y `y`:
+```js
+export class Button {
+  constructor (game, image, x, y) {
+    this.game = game;
+    this.image = image;
+    this.x = x;
+    this.y = y;
+  }
+
+  create () {
+    // Defino la variable `startButton`, para poner en pantalla
+    this.startButton = this.game.add.sprite(400, 400, 'button')
+      .setInteractive();
+    // Comportamientos del `button` con el mouse
+    this.startButton.on('pointerover', () => {
+      this.startButton.setFrame(1);
+    });
+    this.startButton.on('pointerout', () => {
+      this.startButton.setFrame(0);
+    });
+    // Si se presiona el `button` llama el `scene-game`
+    this.startButton.on('pointerdown', () => {
+      // Pongo el sonido y doy play
+      this.game.sound.add('start-game').play();
+      // Inicio la Escena del juego principal
+      this.game.scene.start('scene-game');
+    });
+  }
+}
+```
+6. Movemos todo el `preload` de  **GamoOverScene.js** a 
+**PreloadScene.js** y luego borramos la línea de 
+`this.restartButton.preload();`.
+7. Movemos todo el `preload` de  **CongratulationsScene.js** a 
+**PreloadScene.js** y luego borramos la línea de 
+`this.restartButton.preload();`.
+8. En el Archivo **ButtonBase.js** En el método `create`, mejoremos
+haciendo uso de las variables recibidas en el `constructor`:
+```js
+  create () {
+    // Defino la variable `startButton`, para poner en pantalla
+    this.startButton = this.game.add.sprite(this.x, this.y,
+      this.image).setInteractive();
+    // Comportamientos del `button` con el mouse
+    this.startButton.on('pointerover', () => {
+      this.startButton.setFrame(1);
+    });
+    this.startButton.on('pointerout', () => {
+      this.startButton.setFrame(0);
+    });
+    // Si se presiona el `button` llama un `doClick`
+    this.startButton.on('pointerdown', () => {
+      // Llamo lo q está en `RestartButton`
+      this.doClick();
+    });
+  }
+```
+9. Hagamos la función `doClick` en el archivo **Button-Restart.js**:
+```js
+  doClick () {
+    this.game.scene.start('scene-game');
+  }
+```
+>[!TIP]  
+>Hasta aquí todo funciona, pero aun falta implementer el 
+>`PlayButton`.
+
+10. Copiamos el archivo **Button-Restart.js** y lo renombramos
+como **Button-Play.js**, el nombre de la clase será `PlayButton`,
+La imagen es `'playbutton.png'` y el sonido es `'breakout.mp3'`:
+```js
+export class PlayButton {
+  constructor (game) {
+    this.game = game;
+    this.startButton = null;
+  }
+
+  preload () {
+    this.game.load
+      .spritesheet('button', './assets/images/playbutton.png', {
+        frameWidth: 190, // Ancho dentro de las 2 imagenes
+        frameHeight: 49, // Alto de las imágenes
+      });
+    this.game.load
+      .audio('start-game', './assets/sounds/breakout.mp3');
+  }
+
+  doClick () {
+    this.game.scene.start('scene-game');
+  }
+}
+```
+11. No llevamos ambores `preload` de **Button-Play.js** y de
+**Button-Restart.js**, para el archivo **PreloadScene.js**:
+```js
+    /* -*-*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>>>>>Button-Play<<<<<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-*-* */
+    this.load
+      .spritesheet('button-play', './assets/images/playbutton.png', {
+        frameWidth: 190, // Ancho dentro de las 2 imagenes
+        frameHeight: 49, // Alto de las imágenes
+      });
+    this.load
+      .audio('play-game', './assets/sounds/breakout.mp3');
+
+    /* -*-*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>>>Button-Restart<<<<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-*-* */
+    this.load
+      .spritesheet('button-restart', './assets/images/restart.png', {
+        frameWidth: 190, // Ancho dentro de las 2 imagenes
+        frameHeight: 49, // Alto de las imágenes
+      });
+    this.load
+      .audio('start-game', './assets/sounds/start-game.ogg');
+  }
+
+  create () {
+    this.add.image(400, 250, 'background-preload');
+    this.playButton = this.add.sprite(400, 400, 'play-button')
+      .setInteractive();
+  }
+```
+12. Aprovechemos la clase `Button` en ambos archivos  
+**Button-Play.js** y **Button-Restart.js**, los importamos,
+extendemos la clase `ButtonBase` y el ponemos parámetros en el 
+`constructor` para usarla en el `super`
+* **Play-Button.js**
+```js
+import { ButtonBase } from './ButtonBase.js';
+
+export class PlayButton extends ButtonBase {
+  constructor (game) {
+    super(game, 'button-play', 400, 400);
+  }
+
+  doClick () {
+    this.game.sound.add('play-game').play();
+    this.game.scene.start('scene-game');
+  }
+}
+```
+* **Restart-Button.js**
+```js
+import { ButtonBase } from './ButtonBase.js';
+
+export class RestartButton extends ButtonBase {
+  constructor (game) {
+    super(game, 'button-play', 400, 350);
+  }
+
+  doClick () {
+    this.game.sound.add('start-game').play();
+    this.game.scene.start('scene-game');
+  }
+}
+```
+13. Ahora bien la creación del botón en **PreloadScene.js**, se 
+la debemos delegar al componente `PlayButton`, lo primero
+es importar la clase:
+```js
+import { PlayButton } from '../components/Button-Play.js';
+```
+14. En el mismo **PreloadScene.js** en el `constructor`
+instanciamos el `PlayButton`:
+```js
+  constructor () {
+    super({ key: 'scene-preload' });
+    this.playButton = new PlayButton(this);
+  }
+```
+15. Por último en el `create`, llamamos el método `create` de 
+la clase `PlayButton`:
+```js
+  create () {
+    this.add.image(400, 250, 'background-preload');
+    this.playButton.create();
+  }
+```
