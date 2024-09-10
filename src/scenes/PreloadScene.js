@@ -2,10 +2,12 @@ import Phaser from 'phaser';
 import assetsJson from '../assets.json';
 import { preloadFromJson /*, createFromJson */ } from
   '../components/jsonUtils.js';
+import { PlayButton } from '../components/Button-Play.js';
 
 export class PreloadScene extends Phaser.Scene {
   constructor () {
     super({ key: 'scene-preload' });
+    this.playButton = new PlayButton(this);
   }
 
   preload () {
@@ -52,11 +54,56 @@ export class PreloadScene extends Phaser.Scene {
       { frameWidth: 48, frameHeight: 48 },
       // * Importante: Cuanto mide cada `frame`
     );
+
+    /* -*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>>GameOverScene<<<<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-* */
+    // Lo moví de **GameScene.js**
+    this.load.image('gameover',
+      './assets/images/gameover.png');
+    // llamo el método `preload` de `RestartButton`
+    // this.restartButton.preload();
+    // Precargamos el audio de `gameover`
+    this.load.audio('gameover',
+      './assets/sounds/gameover.ogg');
+
+    /* -*-*-*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>>CongratulationsScene<<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-*-*-* */
+    // Lo moví de **GameScene.js**
+    this.load
+      .image('congratulations', './assets/images/congratulations.png');
+    // llamo el método `preload` de `RestartButton`
+    // this.restartButton.preload();
+    // Precargamos el audio de `gameover`
+    this.load.audio('congratulations',
+      './assets/sounds/you_win.ogg');
+
+    /* -*-*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>>>>>Button-Play<<<<<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-*-* */
+    this.load
+      .spritesheet('button-play', './assets/images/playbutton.png', {
+        frameWidth: 190, // Ancho dentro de las 2 imagenes
+        frameHeight: 49, // Alto de las imágenes
+      });
+    this.load
+      .audio('play-game', './assets/sounds/breakout.mp3');
+
+    /* -*-*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>>>Button-Restart<<<<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-*-* */
+    this.load
+      .spritesheet('button-restart', './assets/images/restart.png', {
+        frameWidth: 190, // Ancho dentro de las 2 imagenes
+        frameHeight: 49, // Alto de las imágenes
+      });
+    this.load
+      .audio('start-game', './assets/sounds/start-game.ogg');
   }
 
   create () {
     this.add.image(400, 250, 'background-preload');
-    this.playButton = this.add.sprite(400, 400, 'play-button')
-      .setInteractive();
+    this.playButton.create();
   }
 }
