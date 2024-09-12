@@ -40,4 +40,8 @@ export class LevelConstructor {
   isLevelFinished () {
     return this.currentLevel.isLevelFinished();
   }
+
+  setBrickCollider (elementX) {
+    this.currentLevel.setBrickCollider(elementX);
+  }
 }

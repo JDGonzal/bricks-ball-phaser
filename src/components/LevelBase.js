@@ -32,6 +32,16 @@ export class LevelBase {
     return (this.bricks.countActive() === 0);
   }
 
+  setBrickCollider (elementX) {
+    console.log('setBrickCollider en LevelBase!!');
+    this.game.physics.add
+      .collider(this.bricks, elementX);
+    if (this.unbreakableBricks) {
+      this.game.physics.add
+        .collider(this.unbreakableBricks, elementX);
+    }
+  }
+
   /* Consigue el número del índice para usarlo en `brickImpact`  */
   getBrickIndex (brick) {
     const children = this.bricks.getChildren();

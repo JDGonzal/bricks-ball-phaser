@@ -100,6 +100,9 @@ export class GameScene extends Phaser.Scene {
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
+
+    // Llamo el método para ver las animaciones de los `diamonds`
+    this.createAnimations();
   }
 
   /* Método para cuando se hace la colisión entre
@@ -193,5 +196,22 @@ export class GameScene extends Phaser.Scene {
     } else {
       this.scene.start('scene-congratulations');
     }
+  }
+
+  setBrickCollider (elementX) {
+    this.levelConstructor.setBrickCollider(elementX);
+  }
+
+  createAnimations () {
+    this.anims.create({
+      key: 'bluediamondanimation',
+      frames: this.anims
+        .generateFrameNumbers('bluediamondsprites', {
+          start: 0, end: 7,
+        }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
   }
 };

@@ -2327,3 +2327,105 @@ la clase `PlayButton`:
     this.playButton.create();
   }
 ```
+
+## 19. Configurar el `setBrickCollider` y `createAnimations`
+
+1. En el archivo **LevelBase.js**, añadimos el método debajo de
+`isPhaseFinished` de nombre `setBrickCollider`, para configurar
+las colisiones entre los `bricks` y un `elementX`:
+```js
+  setBrickCollider (elementX) {
+    console.log('setBrickCollider en LevelBase!!');
+    this.game.physics.add
+      .collider(this.bricks, elementX);
+    if (this.unbreakableBricks) {
+      this.game.physics.add
+        .collider(this.unbreakableBricks, elementX);
+    }
+  }
+```
+2. En el archivo **Level-Constructor.js**, creamos el método
+`setBrickCollider` debajo de `isLevelFinished`, llamando el de 
+`currentLevel`:
+```js
+  setBrickCollider (elementX) {
+    this.currentLevel.setBrickCollider(elementX);
+  }
+```
+>[!WARNING]  
+>Corrijo un error en **Diamond.js**, pongo la colisión entre la
+>`ball` y el `diamond` en el método `create`
+
+3. Llamamos este nuevo método en la clase `Diamonds`, antes de 
+llamar la colisión entre la `ball` y el `diamond`:
+```js
+export class Diamonds {
+  constructor (game) {
+    this.game = game;
+    this.diamond = null;
+  }
+
+  // Recibimos cuatro parámetros
+  create (x, y, sprite, relatedPower) {
+    // Creamos un `diamond` del grupo `diamonds`
+    this.diamond = this.game.physics.add
+      .sprite(x, y, sprite).setScale(0.6);
+    this.diamond.anims.play('bluediamond');
+    this.diamond.body.setAllowRotation();
+    this.diamond.body.setAngularVelocity(100);
+    this.diamond.body.setVelocity(100, 90);
+    this.diamond.setBounce(1);
+    this.diamond.setCollideWorldBounds(true);
+
+    this.game.setBrickCollider(this.diamond);
+    this.game.physics.add.collider(this.game.ball,
+      this.diamond, this.ballImpact, null, this);
+  }
+
+  ballImpact (ball, diamond) {
+    // Destruimos el diamante
+    diamond.destroy();
+    // Evitamos que se pegue
+    ball.glue = false;
+    /* Para evitar que la `ball` se frene con el impacto,
+    la `ball` tenga siempre una velocidad vertical de 300 */
+    const currentVelocity = ball.body.velocity;
+    if (currentVelocity.y > 0) {
+      ball.body.setVelocityY(300);
+    } else {
+      ball.body.setVelocityY(-300);
+    }
+  }
+}
+```
+4. En el archivo **GameScene.js** creo un método similar, q llame 
+el del `LevelConstructor`:
+```js
+  setBrickCollider (elementX) {
+    this.levelConstructor.setBrickCollider(elementX);
+  }
+```
+>[!CAUTION]  
+>Cambié en **PreloadScene.js**, el nombre o `key` del 
+>`spritesheet` a `'bluediamondsprites'`, también debo cambiarlo
+>en el archivo **Diamonds.js**, cuando voy a llamar el 
+>`anims.play`, debo llamar `'bluediamondanimation'`.
+
+5. La animación de los `Diamonds`, la pongo en un método de nombre
+`createAnimations` en el arhivo **GameScene.js**:
+```js
+  createAnimations () {
+    this.anims.create({
+      key: 'bluediamondanimation',
+      frames: this.anims
+        .generateFrameNumbers('bluediamondsprites', {
+          start: 0, end: 7,
+        }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
+  }
+```
+6. Llamo al final del `create` de **GameScene.js** weste nuevo 
+método.

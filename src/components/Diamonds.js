@@ -1,27 +1,24 @@
-import { Math } from 'phaser';
 export class Diamonds {
   constructor (game) {
     this.game = game;
-    this.diamonds = this.game.physics.add.group();
-    this.game.physics.add.collider(this.game.ball,
-      this.diamonds, this.ballImpact, null, this);
+    this.diamond = null;
   }
 
   // Recibimos cuatro parámetros
   create (x, y, sprite, relatedPower) {
     // Creamos un `diamond` del grupo `diamonds`
-    const diamond = this.diamonds.create(x, y, sprite);
-    // asignamos el `relatedPower`
-    diamond.relatedPower = relatedPower;
-    // Definimos otros elementos del `diamond`
-    diamond.setScale(0.6);
-    diamond.anims.play(sprite + '-animation');
-    diamond.body.setAllowRotation();
-    diamond.body.setAngularVelocity(100);
-    diamond.body.setVelocity(Math.Between(-100, 100),
-      Math.Between(-100, 100));
-    diamond.setBounce(1);
-    diamond.setCollideWorldBounds(true);
+    this.diamond = this.game.physics.add
+      .sprite(x, y, sprite).setScale(0.6);
+    this.diamond.anims.play('bluediamondanimation');
+    this.diamond.body.setAllowRotation();
+    this.diamond.body.setAngularVelocity(100);
+    this.diamond.body.setVelocity(100, 90);
+    this.diamond.setBounce(1);
+    this.diamond.setCollideWorldBounds(true);
+
+    this.game.setBrickCollider(this.diamond);
+    this.game.physics.add.collider(this.game.ball,
+      this.diamond, this.ballImpact, null, this);
   }
 
   ballImpact (ball, diamond) {
