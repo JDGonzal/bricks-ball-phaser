@@ -49,7 +49,7 @@ export class PreloadScene extends Phaser.Scene {
       './assets/sounds/fixed-brick-impact.ogg');
 
     // Sprites
-    this.load.spritesheet('bluediamond',
+    this.load.spritesheet('bluediamondsprites',
       './assets/images/blue_diamond-sprites.png',
       { frameWidth: 48, frameHeight: 48 },
       // * Importante: Cuanto mide cada `frame`
