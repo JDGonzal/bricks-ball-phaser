@@ -225,7 +225,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  addLives (num) {
-    this.liveCounter.addLives(num);
+  addLives () {
+    this.liveCounter.addLives();
   }
 };

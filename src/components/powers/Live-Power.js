@@ -7,6 +7,6 @@ export class LivePower extends PowerBase {
 
   givePower () {
     // Esto está en **LiveCounter.js**
-    this.game.addLives(1);
+    this.game.addLives();
   }
 }

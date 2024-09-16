@@ -2528,7 +2528,7 @@ export class LivePower extends PowerBase {
 
   givePower () {
     // Esto está en **LiveCounter.js**
-    this.game.addLives(1);
+    this.game.addLives();
   }
 }
 ```
@@ -2589,8 +2589,8 @@ añado la animación de `reddiamond`:
 14. En el archivo **GameScene.js**, creo el método `addLives`
 con esto:
 ```js
-  addLives (num) {
-    this.liveCounter.addLives(num);
+  addLives () {
+    this.liveCounter.addLives();
   }
 ```
 15. En el archivo **Level01.js** importamos dos componentes
