@@ -2427,5 +2427,195 @@ el del `LevelConstructor`:
     });
   }
 ```
-6. Llamo al final del `create` de **GameScene.js** weste nuevo 
+6. Llamo al final del `create` de **GameScene.js** este nuevo 
 método.
+
+## 20. Añadir el `reddiamond` como `sprite` y otros ajustes
+
+1. En el archivo **LiveCounter.js** subimos algunas constantes 
+del `create` al `constructor`:
+```js
+  constructor (game, initialLives) {
+    this.game = game;
+    this.initialLives = initialLives;
+    this.liveImages = null;
+    /* para indicar la cantidad de píxeles que hay entre cada
+     imagen de cada vida */
+    this.displacement = 30;
+    /* Máximo ancho de la pantalla de juegos */
+    this.maxWidth = 800;
+    /* Escala de la imagen de `hearth` */
+    this.scale = assetsJson.symbols.scale;
+  }
+```
+2. Creo un método en el achivo **LiveCounter.js** de nombre
+ `addLives`, para usar luego que los `diamonds` hagan
+colisión con la `ball` :
+```js
+  addLives () {
+    const targetPos = 755;
+    this.liveImages.getChildren().forEach((item, index) => {
+      item.x = item.x - this.displacement;
+    });
+    this.liveImages.create(targetPos, 26, 'hearth')
+      .setScale(this.scale);
+  }
+```
+3. En el **Diamonds.js**, empezamos unos ajustes en el 
+`constructor`:
+```js
+  constructor (game) {
+    this.game = game;
+    this.diamonds = this.game.physics.add.group();
+    this.game.physics.add.collider(this.game.ball, this.diamonds,
+      this.ballImpact, null, this);
+  }
+```
+4. En el archivo **Diamonds.js**, para el método `create`, 
+hacemos estos cambios:
+```js
+  create (x, y, sprite, relatedPower) {
+    // Creamos un `diamond` del grupo `diamonds`
+    const diamond = this.diamonds.create(x, y, sprite);
+    diamond.relatedPower = relatedPower;
+    diamond.setScale(0.6);
+    diamond.anims.play(sprite + 'animation');
+    diamond.body.setAllowRotation();
+    diamond.body.setAngularVelocity(100);
+    diamond.body.setVelocity(
+      Math.Between(-100, 100),
+      Math.Between(-100, 100),
+    );
+    diamond.setBounce(1);
+    diamond.setCollideWorldBounds(true);
+  }
+```
+5. En el método `ballImpact` de **Diamonds.js**, añadimos el
+`relatedPower` dependiendo del `diamond`:
+```js
+    diamond.relatedPower.givePower();
+```
+6. En el archivo **LevelBase.js**, en el método 
+`deleteUnbreakableBricks`, añado el borrado de los 
+`diamonds` que siguen en escena:
+```js
+    if (this.diamonds) {
+      this.diamonds.getChildren().forEach(item => {
+        item.disableBody(true, true);
+      });
+    }
+```
+7. En el archivo **LiveCounter.js**, importamos `StaticGroupUtils`
+eliminamos un código repetido y lo cambiamos por esto:
+```js
+    // Instanciamos `StaticGroupUtils`
+    this.fixHearts = new StaticGroupUtils(this.liveImages);
+    // Recorremos el `staticGroup` para mejorar la `scale`
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixHearts.fixStaticGroup(
+      this.scale, -60, -30);
+```
+8. En los archivos **GameScene.js** y **PreloadScene.js**, devolvemos el cambio renombrando `bluediamondsprites` 
+a `bluediamond`.
+9. En el archivo **Live-Power.js** Activamos un poder:
+```js
+import { PowerBase } from './PowerBase.js';
+
+export class LivePower extends PowerBase {
+  constructor (game, diamonds) {
+    super(game, diamonds, 'bluediamond');
+  }
+
+  givePower () {
+    // Esto está en **LiveCounter.js**
+    this.game.addLives(1);
+  }
+}
+```
+10. Creamos otro componente en la carpeta "src/components/powers"
+de nombre **Points-Power.js**, con esto:
+```js
+import { PowerBase } from './PowerBase.js';
+
+export class PointsPower extends PowerBase {
+  constructor (game, diamonds) {
+    super(game, diamonds, 'reddiamond');
+  }
+}
+```
+11. En el archivo **PreloadScene.js**, añado el `spritesheet` 
+de nombre `reddiamond`:
+```js
+    this.load.spritesheet('reddiamond',
+      './assets/images/red_diamond-sprites.png',
+      { frameWidth: 48, frameHeight: 48 },
+      // * Importante: Cuanto mide cada `frame`
+    );
+```
+12. En el archivo **PowerBase.js**, al constructor hago varias
+correcciones:
+```js
+export class PowerBase {
+  constructor (game, diamonds, powerSprite) {
+    this.game = game;
+    this.powerSprite = powerSprite;
+    this.diamonds = diamonds;
+  }
+
+  create (x, y) {
+    // Llamamos el método `create`
+    this.diamonds.create(x, y, this.powerSprite, this);
+  }
+
+  givePower () {
+    console.log('Definition of Power');
+  }
+}
+```
+13. En el archivo **GameScene.js** en el método `createAnimations`
+añado la animación de `reddiamond`:
+```js
+    this.anims.create({
+      key: 'reddiamondanimation',
+      frames: this.anims
+        .generateFrameNumbers('reddiamond', {
+          start: 0, end: 7,
+        }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
+```
+14. En el archivo **GameScene.js**, creo el método `addLives`
+con esto:
+```js
+  addLives (num) {
+    this.liveCounter.addLives(num);
+  }
+```
+15. En el archivo **Level01.js** importamos dos componentes
+`PointsPower` y `Diamonds`:
+```js
+import { PointsPower } from './powers/Points-Power.js';
+import { Diamonds } from './Diamonds.js';
+```
+16. Borramos los `powers` debajo del comentario 
+`// ...'bricks' 3, 4, y 5` y ponemos ahi estos cambios:
+```js
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 3, 4, y 5
+    this.powers[3] = new LivePower(this.game, this.diamonds);
+    this.powers[4] = new LivePower(this.game, this.diamonds);
+    this.powers[5] = new PointsPower(this.game, this.diamonds);
+```
+17. Debemos borrar los `diamonds`, cuando pasamos de escena, esto
+se hace en el método `deleteUnbreakableBricks` de **LevelBase.js**:
+```js
+    if (this.diamonds.diamonds) {
+      this.diamonds.diamonds.getChildren().forEach(item => {
+        item.disableBody(true, true);
+      });
+    }
+```

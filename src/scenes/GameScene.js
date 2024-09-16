@@ -206,12 +206,26 @@ export class GameScene extends Phaser.Scene {
     this.anims.create({
       key: 'bluediamondanimation',
       frames: this.anims
-        .generateFrameNumbers('bluediamondsprites', {
+        .generateFrameNumbers('bluediamond', {
           start: 0, end: 7,
         }),
       frameRate: 10,
       repeat: -1,
       yoyo: true,
     });
+    this.anims.create({
+      key: 'reddiamondanimation',
+      frames: this.anims
+        .generateFrameNumbers('reddiamond', {
+          start: 0, end: 7,
+        }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
+  }
+
+  addLives (num) {
+    this.liveCounter.addLives(num);
   }
 };

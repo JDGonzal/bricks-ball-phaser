@@ -1,15 +1,16 @@
-import { Diamonds } from '../Diamonds.js';
-
 export class PowerBase {
-  constructor (game, powerSprite) {
+  constructor (game, diamonds, powerSprite) {
     this.game = game;
     this.powerSprite = powerSprite;
+    this.diamonds = diamonds;
   }
 
   create (x, y) {
-    // Instanciamos la clase `Diamonds`
-    this.diamonds = new Diamonds(this.game);
     // Llamamos el método `create`
-    this.diamonds.create(x, y, this.powerSprite);
+    this.diamonds.create(x, y, this.powerSprite, this);
+  }
+
+  givePower () {
+    console.log('Definition of Power');
   }
 }
