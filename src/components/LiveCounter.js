@@ -1,44 +1,47 @@
 import assetsJson from '../assets.json';
+import { StaticGroupUtils } from './StaticGroupUtils';
 
 export class LiveCounter {
   constructor (game, initialLives) {
     this.game = game;
     this.initialLives = initialLives;
     this.liveImages = null;
+    /* para indicar la cantidad de píxeles que hay entre cada
+     imagen de cada vida */
+    this.displacement = 30;
+    /* Máximo ancho de la pantalla de juegos */
+    this.maxWidth = 800;
+    /* Escala de la imagen de `hearth` */
+    this.scale = assetsJson.symbols.scale;
   }
 
   create () {
-    /* para indicar la cantidad de píxeles que hay entre cada
-     imagen de cada vida */
-    const displacement = 30;
     /*  la posición donde se colocaría la primera imagen,
     que tengo que calcular en función del número de vidas
     a mostrar en el display, */
-    const firstPosition = 800 - ((this.initialLives - 1) *
-      displacement);
+    const firstPosition = this.maxWidth - ((this.initialLives - 1) *
+      this.displacement);
 
-    const scale = assetsJson.symbols.scale;
+    /* Lista de `heart` que representan las vidas */
     this.liveImages = this.game.physics.add.staticGroup({
-      setScale: { x: scale, y: scale },
+      setScale: { x: this.scale, y: this.scale },
       key: 'hearth',
       frameQuantity: this.initialLives - 1,
       gridAlign: {
         width: this.initialLives - 1,
         height: 1,
-        cellWidth: displacement,
+        cellWidth: this.displacement,
         cellHeight: 30,
         x: firstPosition,
         y: 1,
       },
     });
+    // Instanciamos `StaticGroupUtils`
+    this.fixHearts = new StaticGroupUtils(this.liveImages);
     // Recorremos el `staticGroup` para mejorar la `scale`
-    this.liveImages.children.each(function (partOf) {
-      partOf.setScale(scale);
-      partOf.setSize(partOf.displayWidth, partOf.displayHeight);
-      partOf.x -= 60;
-      partOf.y -= 30;
-      partOf.refreshBody(); // Este siempre de último
-    });
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixHearts.fixStaticGroup(
+      this.scale, -60, -30);
   }
 
   /* Cuenta las vidas disponibles y los muestra en los corazones */
@@ -56,5 +59,15 @@ export class LiveCounter {
     /* Borra la primera imagen que encuentra */
     currentLiveLost.disableBody(true, true);
     return true;
+  }
+
+  /* Incrementamos vidas y ponemos la imagen respectiva */
+  addLives () {
+    const targetPos = 755;
+    this.liveImages.getChildren().forEach((item, index) => {
+      item.x = item.x - this.displacement;
+    });
+    this.liveImages.create(targetPos, 26, 'hearth')
+      .setScale(this.scale);
   }
 }

@@ -25,6 +25,12 @@ export class LevelBase {
         item.disableBody(true, true);
       });
     }
+    // Borramos los `diamonds` tambien
+    if (this.diamonds.diamonds) {
+      this.diamonds.diamonds.getChildren().forEach(item => {
+        item.disableBody(true, true);
+      });
+    }
   }
 
   /* Será llamado de cada nivel a ser utilizado */
