@@ -2619,3 +2619,544 @@ se hace en el método `deleteUnbreakableBricks` de **LevelBase.js**:
       });
     }
 ```
+
+## 21. Mas Poderes y mas Niveles
+
+1. En el archivo **PreloadScene.js**, añadimos una nuevo sprite
+para el `greendiamond`, basado en la imagen 
+**green_diamond-sprites.png**, la `platform` mas larga la tomamos
+del archivo json con este id `'platform-electric-long'`:
+```js
+    this.load.spritesheet('greendiamond',
+      './assets/images/green_diamond-sprites.png',
+      { frameWidth: 48, frameHeight: 48 },
+      // * Importante: Cuanto mide cada `frame`
+    );
+```
+2. En **GameScene.js**, añadimos la animación para `greendiamond`:
+```js
+    this.anims.create({
+      key: 'greendiamondanimation',
+      frames: this.anims
+        .generateFrameNumbers('greendiamond', {
+          start: 0, end: 7,
+        }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
+```
+3. Creamos un archivo en "src/components/powers" de nombre
+**Glue-Power.js**, con esto:
+```js
+ import { PowerBase } from './PowerBase.js';
+
+export class GluePower extends PowerBase {
+  constructor (game, diamonds) {
+    super(game, diamonds, 'greendiamond');
+  }
+
+  givePower () {
+    // Esto está en **GameScene.js**
+    this.game.setGluePower();
+  }
+}
+```
+4. Ahora nos vamos a **GameScene.js** a crear el método 
+`setGluePower`:
+```js
+  setGluePower () {
+    this.setPlatformInitial();
+    this.gluePower = true;
+  }
+```
+5. En el archivo **GameScene.js** definimos unas constantes:
+```js
+const PLATFORM_SIZE_NORMAL = { width: 488, height: 128 };
+const PLATFORM_SIZE_BIG = { width: 693, height: 128 };
+const PLATFORM_SCALE = assetsJson.platforms.scale;
+const INITIAL_VELOCITY_X = -60;
+const PLATFORM_TEXTURE_NORMAL = 'platform-normal';
+const PLATFORM_TEXTURE_BIG = 'platform-electric-long';
+```
+6. En el archivo **GameScene.js**, agregamos en el `constructor` 
+dos valores inicializados en `false` y otro con 
+`INITIAL_VELOCITY_X`:
+```js
+    this.gluePower = false;
+    this.isGlued = false;
+    this.glueRecordVelocityX = INITIAL_VELOCITY_X;
+```
+7. Preguntamos por el `this.gluePower` en el método `platformImpact`
+del archivo **GameScene.js**, hacemos ajuste en ese método.
+tambien controlamos la generación de puntos:
+```js
+  platformImpact (ball, platform) {
+    // Si esta en estado `glue` simplemente se sale
+    if (this.ball.glue) return;
+    // Llamo la función de **Scoreboard.js**
+    if (this.ball.body.velocity.y > 0) {
+      this.scoreboard.addPoints(1);
+    }
+    // Pongo el sonido y doy play
+    this.sound.add('platform-impact').play();
+    /* Los comportamientos entre la `ball` y la `platform`
+    obteniendo la posición relativa entre estos */
+    const relativeImpact = ball.x - platform.x;
+
+    if (this.gluePower) {
+      ball.setVelocityY(0);
+      ball.setVelocityX(0);
+      // Guardamos la velocidad antes de lanzarla
+      this.glueRecordVelocityX =
+        this.calculateVelocity(relativeImpact);
+      this.isGlued = true;
+    } else {
+      ball.setVelocityX(this.calculateVelocity(relativeImpact));
+    }
+  }
+```
+8. Agregamos en el archivo **GameScene.js** el método 
+`calculateVelocity`:
+```js
+  calculateVelocity (relativeImpact) {
+    console.log(relativeImpact);
+    // se añade condición si el valor esta muy en el centro
+    if (relativeImpact <= 1 && relativeImpact >= -1) {
+      return (Phaser.Math.Between(-20, 20));
+    } else {
+      // Cambia la velociad de X en función a este valor
+      return (Phaser.Math.Between(6, 10) * relativeImpact);
+    }
+  }
+```
+9. Creamos tres métodos en el archivo **GameScene.js**, para
+ciertos cambios de la `platform`:
+```js
+  setPlatformTexture (texture, size = PLATFORM_SIZE_NORMAL) {
+    const { width, height } = size;
+    const scale = PLATFORM_SCALE;
+    this.physics.world.pause();
+    this.anims.pauseAll();
+    this.platform.setTexture(texture);
+    this.platform.setDisplaySize(width * scale, height * scale);
+    this.platform.body.setSize(width, height);
+    this.physics.world.resume();
+    this.anims.resumeAll();
+  }
+
+  setPlatformBig () {
+    this.setPlatformTexture(PLATFORM_TEXTURE_BIG,
+      PLATFORM_SIZE_BIG);
+    this.ball.glue = false;
+  }
+
+  setPlatformInitial () {
+    this.setPlatformTexture(PLATFORM_TEXTURE_NORMAL);
+  }
+```
+10. En el archivo **GameScene.js**, en la condición 
+`if (gameNotFinished)`ponemos esto:
+```js
+      if (gameNotFinished) {
+        this.setInitialPlatformState();
+        this.setPlatformInitial();
+        this.gluePower = false;
+        this.glueRecordVelocityX = INITIAL_VELOCITY_X;
+      }
+```
+11. En el archivo **GameScene.js**, hacemos cambios en el momento
+de presionar las teclas `space` o `up`:
+```js
+    /* Asociamos la velocidad de la `ball` a la `platform`
+    cuando la `ball` esté muy cerquita de la `platform` */
+    if (this.ball.glue || this.isGlued) {
+      this.ball.setVelocityX(this.platform.body.velocity.x);
+    }
+    /* Salta la `ball` si está en contacto con la `platform` */
+    if (this.cursor.space.isDown || this.cursor.up.isDown) {
+      if (this.ball.glue) {
+        this.ball.setVelocity(Phaser.Math.Between(-20, 20), -300);
+        this.ball.glue = false;
+      } else if (this.gluePower && this.isGlued) {
+        this.isGlued = false;
+        this.ball.setVelocity(this.glueRecordVelocityX, -300);
+      }
+    }
+```
+12. Creamos en la carpeta "src/components/powers" el archivo **Large-Platform-Power.js** con el siguiente código:
+```js
+import { PowerBase } from './PowerBase.js';
+
+export class LargePlatformPower extends PowerBase {
+  constructor (game, diamonds) {
+    super(game, diamonds, 'reddiamond');
+  }
+
+  givePower () {
+    this.game.setPlatformBig();
+  }
+}
+```
+13. Borramos el archivo **Points-Power.js**.
+14. Cambiamos en **Level01.js** todo lo relacionado con 
+`PointsPower` por la clase `LargePlatformPower`:
+```js
+import { LargePlatformPower } from './powers/Large-Platform-Power.js';
+...
+  create () {
+    ...
+    this.powers[5] = new LargePlatformPower(this.game, this.diamonds);
+  }
+```
+15. Aprovecho y añado en **Level01.js** el `GluePower`:
+```js
+import { GluePower } from './powers/Glue-Power.js';
+...
+  create () {
+    ...
+    this.powers[1] = new GluePower(this.game, this.diamonds);
+  }
+```
+16. En el método `platformImpact` de **GameScene.js** agregando
+una nueva condición relacionada con el `gluePower`:
+```js
+    if (this.gluePower) {
+      ball.setVelocityY(0);
+      ball.setVelocityX(0);
+      // Guardamos la velocidad antes de lanzarla
+      this.glueRecordVelocityX =
+        this.calculateVelocity(relativeImpact);
+      this.isGlued = true;
+    } else {
+      ball.setVelocityX(this.calculateVelocity(relativeImpact));
+    }
+```
+
+>[!TIP]  
+>Ya tenemos al menos el archivo **Level01.js**, vamos a crear
+>nuevos archivos con mas niveles y modificar a **Level02.js** y
+>**Level03.js**
+17. Creamos la carpeta "levels" dentro de "src/components".
+18. Movemos todos los archivo de **LevelXX.js**, el 
+**Level-Constructor.js** y el **LevelBase.js** a esta nueva
+carpeta.
+19. En el archivo **Level01.js**, el orden de las importaciones:
+```js
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
+```
+20. Añadimos en **Level01.js** dos `unbreakableBricks`:
+```js
+    // Se crea otro `staticGroup` para los `unbreakableBricks`
+    this.unbreakableBricks = this.game.physics.add.staticGroup();
+    this.unbreakableBricks.create(316, 165, 'brick-gray');
+    this.unbreakableBricks.create(466, 165, 'brick-gray');
+    // Instanciamos `StaticGroupUtils`
+    this.fixUnbreakableBricks =
+      new StaticGroupUtils(this.unbreakableBricks);
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixUnbreakableBricks.fixStaticGroup(
+      assetsJson.bricks.scale, 20, -30);
+```
+21. Configuramos la colisión faltante llamando el método
+`configureColisionsUnbreakable` en  **Level01.js**.
+22. En el archivo **Level01.js**, la nueva lista de poderes será 
+esta:
+```js
+    // Invocamos Powers en los `bricks` 3, 5, y 7
+    this.powers[3] = new LivePower(this.game, this.diamonds);
+    this.powers[5] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[7] = new GluePower(this.game, this.diamonds);
+```
+23. En el archivo **Level02.js**, añadimos nuevas importaciones:
+```js
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
+```
+24. Agregamos en el uso de la clase `Diamonds` y algunos
+poderes en el `create` de **Level02.js**:
+```js
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 11, 10, y 4
+    this.powers[11] = new LivePower(this.game, this.diamonds);
+    this.powers[10] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[4] = new GluePower(this.game, this.diamonds);
+```
+25. En el archivo **Level03.js**, añadimos nuevas importaciones:
+```js
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
+```
+26. Agregamos en el uso de la clase `Diamonds` y algunos
+poderes en el `create` de **Level03.js**:
+```js
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 3, 4, y 1
+    this.powers[3] = new LivePower(this.game, this.diamonds);
+    this.powers[4] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[1] = new GluePower(this.game, this.diamonds);
+```
+27. Creamos el archio **Level04.js** en la carpeta 
+"src/components/levels", Empezamos con la importación, la 
+exportación de la clase `Level04` y el método `create`:
+```js
+import { LevelBase } from './LevelBase.js';
+import assetsJson from '../../assets.json';
+import { StaticGroupUtils } from '../StaticGroupUtils.js';
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
+
+export class Level04 extends LevelBase {
+  create () {}
+}
+```
+28. Ahora si ponemos en **Level04.js**, lo que va en el método 
+`create`:
+```js
+  create () {
+    // Creamos el `staticGroup` y ponemos los `bricks`
+    this.bricks = this.game.physics.add.staticGroup({
+      key: ['brick-blue', 'brick-orange',
+        'brick-green', 'brick-yellow'],
+      frameQuantity: 10,
+      // scale: assetsJson.bricks.scale,
+      gridAlign: {
+        width: 10,
+        height: 4,
+        cellWidth: 67,
+        cellHeight: 34,
+        x: 40,
+        y: 20,
+      },
+    });
+
+    // Instanciamos `StaticGroupUtils`
+    this.fixBricks = new StaticGroupUtils(this.bricks);
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixBricks.fixStaticGroup(
+      assetsJson.bricks.scale, -120);
+
+    /* llamamos esto de `LevelBase` */
+    this.configureColisions();
+
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 3, 35, 1, 24, 16, 29
+    this.powers[3] = new LivePower(this.game, this.diamonds);
+    this.powers[35] = new LivePower(this.game, this.diamonds);
+    this.powers[1] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[24] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[16] = new GluePower(this.game, this.diamonds);
+    this.powers[29] = new GluePower(this.game, this.diamonds);
+  }
+```
+29. En el archivo **Level-Constructor.js**, ponemos lo necesario
+para que la nueva clase `Level04` sea invocada y usada:
+```js
+...
+import { Level04 } from './Level04';
+
+export class LevelConstructor {
+  constructor (game) {
+
+    this.levels = [
+      ...
+      Level04,
+    ];
+    this.currentLevel = null;
+  }
+...
+}
+``` 
+>[!TIP]  
+>Para las pruebas voy a aumentar el número de vidas usando una 
+>constante, añado esto en **GakenScene.js**:
+>```js
+>const INITIAL_LIVES = 10;
+>...
+>  init () {
+>...
+>    this.liveCounter = new LiveCounter(this, INITIAL_LIVES);
+>  }
+>```
+30. Creamos el archio **Level05.js** en la carpeta 
+"src/components/levels", Empezamos con la importación, la 
+exportación de la clase `Level04` y el método `create`:
+```js
+import { LevelBase } from './LevelBase.js';
+import assetsJson from '../../assets.json';
+import { StaticGroupUtils } from '../StaticGroupUtils.js';
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+
+export class Level05 extends LevelBase {
+  create () {}
+}
+```
+31. Ahora si ponemos en **Level05.js**, lo que va en el método 
+`create`:
+```js
+  create () {
+    this.bricks = this.game.physics.add.staticGroup({
+      key: ['brick-blue'],
+      frameQuantity: 4,
+      gridAlign: {
+        width: 10,
+        height: 5,
+        cellWidth: 130,
+        cellHeight: 34,
+        x: 40,
+        y: 20,
+      },
+    });
+    // Instanciamos `StaticGroupUtils`
+    this.fixBricks = new StaticGroupUtils(this.bricks);
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixBricks.fixStaticGroup(
+      assetsJson.bricks.scale);
+
+    this.unbreakableBricks = this.game.physics.add.staticGroup({
+      key: ['brick-gray'],
+      frameQuantity: 4,
+      gridAlign: {
+        width: 10,
+        height: 5,
+        cellWidth: 130,
+        cellHeight: 34,
+        x: 40,
+        y: 60,
+      },
+    });
+    // Instanciamos `StaticGroupUtils`
+    this.fixUnbreakableBricks =
+        new StaticGroupUtils(this.unbreakableBricks);
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixUnbreakableBricks.fixStaticGroup(
+      assetsJson.bricks.scale);
+
+    /* llamamos esto de `LevelBase` */
+    this.configureColisions();
+    this.configureColisionsUnbreakable();
+
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 1, y 3
+    this.powers[1] = new LivePower(this.game, this.diamonds);
+    this.powers[3] = new LargePlatformPower(this.game, this.diamonds);
+  }
+```
+32. En el archivo **Level-Constructor.js**, ponemos lo necesario
+para que la nueva clase `Level05` sea invocada y usada:
+```js
+...
+import { Level05 } from './Level05';
+
+export class LevelConstructor {
+  constructor (game) {
+
+    this.levels = [
+      ...
+      Level05,
+    ];
+    this.currentLevel = null;
+  }
+...
+}
+``` 
+33. Creamos el archio **Level06.js** en la carpeta 
+"src/components/levels", Empezamos con la importación, la 
+exportación de la clase `Level04` y el método `create`:
+```js
+import { LevelBase } from './LevelBase.js';
+import assetsJson from '../../assets.json';
+import { StaticGroupUtils } from '../StaticGroupUtils.js';
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
+
+export class Level06 extends LevelBase {
+  create () {}
+}
+```
+34. Ahora si ponemos en **Level06.js**, lo que va en el método 
+`create`:
+```js
+  create () {
+    this.bricks = this.game.physics.add.staticGroup({
+      key: ['light-blue', 'brick-brown', 'light-blue',
+        'brick-brown', 'light-blue'],
+      frameQuantity: 10,
+      gridAlign: {
+        width: 10,
+        height: 5,
+        cellWidth: 67,
+        cellHeight: 34,
+        x: 80,
+        y: 20,
+      },
+    });
+    // Instanciamos `StaticGroupUtils`
+    this.fixBricks = new StaticGroupUtils(this.bricks);
+    // se hace el fix de los `bricks` del `staticGroup`
+    this.fixBricks.fixStaticGroup(
+      assetsJson.bricks.scale);
+
+    this.bricks.getChildren().forEach((element, idx) => {
+      if ((idx >= 10 && idx < 20) || (idx >= 30 && idx < 40)) {
+        idx++;
+      }
+      if (((idx + 1) % 2) === 0) {
+        element.disableBody(true, true);
+      }
+    });
+
+    /* llamamos esto de `LevelBase` */
+    this.configureColisions();
+
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 3, 14, 21, 4, 15, 22
+    this.powers[3] = new LivePower(this.game, this.diamonds);
+    this.powers[14] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[21] = new GluePower(this.game, this.diamonds);
+    this.powers[4] = new LivePower(this.game, this.diamonds);
+    this.powers[15] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[22] = new GluePower(this.game, this.diamonds);
+  }
+```
+35. En el archivo **Level-Constructor.js**, ponemos lo necesario
+para que la nueva clase `Level06` sea invocada y usada:
+```js
+...
+import { Level05 } from './Level06';
+
+export class LevelConstructor {
+  constructor (game) {
+
+    this.levels = [
+      ...
+      Level06,
+    ];
+    this.currentLevel = null;
+  }
+...
+}
+``` 

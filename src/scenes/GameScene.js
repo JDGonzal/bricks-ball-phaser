@@ -3,7 +3,15 @@ import assetsJson from '../assets.json'; // assert { type: 'json' };
 import { Scoreboard } from '../components/Scoreboard.js';
 
 import { LiveCounter } from '../components/LiveCounter.js';
-import { LevelConstructor } from '../components/Level-Constructor.js';
+import { LevelConstructor } from '../components/levels/Level-Constructor.js';
+
+const PLATFORM_SIZE_NORMAL = { width: 488, height: 128 };
+const PLATFORM_SIZE_BIG = { width: 693, height: 128 };
+const PLATFORM_SCALE = assetsJson.platforms.scale;
+const INITIAL_VELOCITY_X = -60;
+const PLATFORM_TEXTURE_NORMAL = 'platform-normal';
+const PLATFORM_TEXTURE_BIG = 'platform-electric-long';
+const INITIAL_LIVES = 10;
 
 /* Se exporta la clase a usar de la Escena */
 export class GameScene extends Phaser.Scene {
@@ -19,6 +27,9 @@ export class GameScene extends Phaser.Scene {
     this.liveCounter = null;
     this.levelConstructor = null;
     this.diamondBlue = null;
+    this.gluePower = false;
+    this.isGlued = false;
+    this.glueRecordVelocityX = INITIAL_VELOCITY_X;
   }
 
   /* Valores que puedo inicializar */
@@ -28,7 +39,7 @@ export class GameScene extends Phaser.Scene {
     // instancio el `Scoreboard`
     this.scoreboard = new Scoreboard(this);
     // instancio el `LiveCounter`
-    this.liveCounter = new LiveCounter(this, 3);
+    this.liveCounter = new LiveCounter(this, INITIAL_LIVES);
   }
 
   create () {
@@ -67,9 +78,9 @@ export class GameScene extends Phaser.Scene {
     this.ball.setCollideWorldBounds(true);
     // Mostramos la `platform-normal` con physics
     this.platform =
-      this.physics.add.image(400, 450, 'platform-normal')
+      this.physics.add.image(400, 450, PLATFORM_TEXTURE_NORMAL)
         .setOrigin(0.5, 0)
-        .setScale(assetsJson.platforms.scale);
+        .setScale(PLATFORM_SCALE);
     // Como la plataforma cae le decimos q no va a tener gravedad
     this.platform.body.allowGravity = false;
     // La velocidad(x,y) de la `ball` será aleatoria
@@ -111,20 +122,35 @@ export class GameScene extends Phaser.Scene {
     // Si esta en estado `glue` simplemente se sale
     if (this.ball.glue) return;
     // Llamo la función de **Scoreboard.js**
-    this.scoreboard.addPoints(1);
+    if (this.ball.body.velocity.y > 0) {
+      this.scoreboard.addPoints(1);
+    }
     // Pongo el sonido y doy play
     this.sound.add('platform-impact').play();
     /* Los comportamientos entre la `ball` y la `platform`
     obteniendo la posición relativa entre estos */
     const relativeImpact = ball.x - platform.x;
+
+    if (this.gluePower) {
+      ball.setVelocityY(0);
+      ball.setVelocityX(0);
+      // Guardamos la velocidad antes de lanzarla
+      this.glueRecordVelocityX =
+        this.calculateVelocity(relativeImpact);
+      this.isGlued = true;
+    } else {
+      ball.setVelocityX(this.calculateVelocity(relativeImpact));
+    }
+  }
+
+  calculateVelocity (relativeImpact) {
     console.log(relativeImpact);
     // se añade condición si el valor esta muy en el centro
     if (relativeImpact <= 1 && relativeImpact >= -1) {
-      ball.setVelocityX(Phaser.Math.Between(-20, 20));
+      return (Phaser.Math.Between(-20, 20));
     } else {
       // Cambia la velociad de X en función a este valor
-      ball.setVelocityX(Phaser.Math.Between(6, 10) *
-        relativeImpact);
+      return (Phaser.Math.Between(6, 10) * relativeImpact);
     }
   }
 
@@ -157,16 +183,23 @@ export class GameScene extends Phaser.Scene {
       this.platform.setVelocityX(-500);
     } else if (this.cursor.right.isDown) {
       this.platform.setVelocityX(500);
-    } else this.platform.setVelocityX(0);
+    } else {
+      this.platform.setVelocityX(0);
+    }
 
     /* Asociamos la velocidad de la `ball` a la `platform`
     cuando la `ball` esté muy cerquita de la `platform` */
-    if (this.platform.y - this.ball.y <= 10 && this.ball.glue) {
+    if (this.ball.glue || this.isGlued) {
       this.ball.setVelocityX(this.platform.body.velocity.x);
-      /* Salta la `ball` si está en contacto con la `platform` */
-      if (this.cursor.space.isDown || this.cursor.up.isDown) {
+    }
+    /* Salta la `ball` si está en contacto con la `platform` */
+    if (this.cursor.space.isDown || this.cursor.up.isDown) {
+      if (this.ball.glue) {
         this.ball.setVelocity(Phaser.Math.Between(-20, 20), -300);
         this.ball.glue = false;
+      } else if (this.gluePower && this.isGlued) {
+        this.isGlued = false;
+        this.ball.setVelocity(this.glueRecordVelocityX, -300);
       }
     }
 
@@ -176,18 +209,21 @@ export class GameScene extends Phaser.Scene {
       const gameNotFinished = this.liveCounter.liveLost();
       if (gameNotFinished) {
         this.setInitialPlatformState();
+        this.setPlatformInitial();
+        this.gluePower = false;
+        this.glueRecordVelocityX = INITIAL_VELOCITY_X;
       }
     }
   }
 
   setInitialPlatformState () {
-    this.ball.setVelocity(0, 0)
-      .setPosition(400, 449)
-      .setOrigin(0.5, 1);
     this.ball.glue = true;
     this.platform.setVelocity(0, 0)
       .setPosition(400, 450)
       .setOrigin(0.5, 0);
+    this.ball.setVelocity(0, 0)
+      .setPosition(400, 449)
+      .setOrigin(0.5, 1);
   }
 
   endGame (completed = false) {
@@ -223,9 +259,46 @@ export class GameScene extends Phaser.Scene {
       repeat: -1,
       yoyo: true,
     });
+    this.anims.create({
+      key: 'greendiamondanimation',
+      frames: this.anims
+        .generateFrameNumbers('greendiamond', {
+          start: 0, end: 7,
+        }),
+      frameRate: 10,
+      repeat: -1,
+      yoyo: true,
+    });
   }
 
   addLives () {
     this.liveCounter.addLives();
+  }
+
+  setGluePower () {
+    this.setPlatformInitial();
+    this.gluePower = true;
+  }
+
+  setPlatformTexture (texture, size = PLATFORM_SIZE_NORMAL) {
+    const { width, height } = size;
+    const scale = PLATFORM_SCALE;
+    this.physics.world.pause();
+    this.anims.pauseAll();
+    this.platform.setTexture(texture);
+    this.platform.setDisplaySize(width * scale, height * scale);
+    this.platform.body.setSize(width, height);
+    this.physics.world.resume();
+    this.anims.resumeAll();
+  }
+
+  setPlatformBig () {
+    this.setPlatformTexture(PLATFORM_TEXTURE_BIG,
+      PLATFORM_SIZE_BIG);
+    this.gluePower = false;
+  }
+
+  setPlatformInitial () {
+    this.setPlatformTexture(PLATFORM_TEXTURE_NORMAL);
   }
 };

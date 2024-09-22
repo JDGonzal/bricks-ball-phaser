@@ -1,11 +1,12 @@
 import { LevelBase } from './LevelBase.js';
-import assetsJson from '../assets.json';
-import { StaticGroupUtils } from './StaticGroupUtils.js';
-import { LivePower } from './powers/Live-Power.js';
-import { PointsPower } from './powers/Points-Power.js';
-import { Diamonds } from './Diamonds.js';
+import assetsJson from '../../assets.json';
+import { StaticGroupUtils } from '../StaticGroupUtils.js';
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
 
-export class Level01 extends LevelBase {
+export class Level03 extends LevelBase {
   create () {
     // Creamos el `staticGroup` y ponemos los `bricks`
     this.bricks = this.game.physics.add.staticGroup({
@@ -37,9 +38,9 @@ export class Level01 extends LevelBase {
     // Instanciamos la clase `Diamonds`
     this.diamonds = new Diamonds(this.game);
     this.setBrickCollider(this.diamonds.diamonds);
-    // Invocamos Powers en los `bricks` 3, 4, y 5
+    // Invocamos Powers en los `bricks` 3, 4, y 1
     this.powers[3] = new LivePower(this.game, this.diamonds);
-    this.powers[4] = new LivePower(this.game, this.diamonds);
-    this.powers[5] = new PointsPower(this.game, this.diamonds);
+    this.powers[4] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[1] = new GluePower(this.game, this.diamonds);
   }
 }

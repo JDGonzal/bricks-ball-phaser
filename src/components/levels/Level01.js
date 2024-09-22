@@ -1,8 +1,12 @@
 import { LevelBase } from './LevelBase.js';
-import assetsJson from '../assets.json';
-import { StaticGroupUtils } from './StaticGroupUtils.js';
+import assetsJson from '../../assets.json';
+import { StaticGroupUtils } from '../StaticGroupUtils.js';
+import { Diamonds } from '../Diamonds.js';
+import { LivePower } from '../powers/Live-Power.js';
+import { LargePlatformPower } from '../powers/Large-Platform-Power.js';
+import { GluePower } from '../powers/Glue-Power.js';
 
-export class Level03 extends LevelBase {
+export class Level01 extends LevelBase {
   create () {
     // Creamos el `staticGroup` y ponemos los `bricks`
     this.bricks = this.game.physics.add.staticGroup({
@@ -21,18 +25,16 @@ export class Level03 extends LevelBase {
         y: 20,
       },
     });
-
     // Instanciamos `StaticGroupUtils`
     this.fixBricks = new StaticGroupUtils(this.bricks);
     // se hace el fix de los `bricks` del `staticGroup`
     this.fixBricks.fixStaticGroup(
       assetsJson.bricks.scale, -120);
 
-    // Se crea otro `staticGroup`
+    // Se crea otro `staticGroup` para los `unbreakableBricks`
     this.unbreakableBricks = this.game.physics.add.staticGroup();
     this.unbreakableBricks.create(316, 165, 'brick-gray');
     this.unbreakableBricks.create(466, 165, 'brick-gray');
-
     // Instanciamos `StaticGroupUtils`
     this.fixUnbreakableBricks =
       new StaticGroupUtils(this.unbreakableBricks);
@@ -43,5 +45,13 @@ export class Level03 extends LevelBase {
     /* llamamos esto de `LevelBase` */
     this.configureColisions();
     this.configureColisionsUnbreakable();
+
+    // Instanciamos la clase `Diamonds`
+    this.diamonds = new Diamonds(this.game);
+    this.setBrickCollider(this.diamonds.diamonds);
+    // Invocamos Powers en los `bricks` 3, 5, y 7
+    this.powers[3] = new LivePower(this.game, this.diamonds);
+    this.powers[5] = new LargePlatformPower(this.game, this.diamonds);
+    this.powers[7] = new GluePower(this.game, this.diamonds);
   }
 }
