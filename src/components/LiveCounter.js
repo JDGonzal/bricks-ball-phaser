@@ -63,11 +63,13 @@ export class LiveCounter {
 
   /* Incrementamos vidas y ponemos la imagen respectiva */
   addLives () {
-    const targetPos = 755;
+    const targetPos = this.maxWidth - this.displacement;
+    // Muevo los `hearth` una casilla a la izquierda
     this.liveImages.getChildren().forEach((item, index) => {
       item.x = item.x - this.displacement;
     });
-    this.liveImages.create(targetPos, 26, 'hearth')
+    this.liveImages.create(targetPos, 30, 'hearth')
+      .setOrigin(0.5, 1)
       .setScale(this.scale);
   }
 }

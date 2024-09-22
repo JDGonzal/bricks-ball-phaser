@@ -59,6 +59,11 @@ export class PreloadScene extends Phaser.Scene {
       { frameWidth: 48, frameHeight: 48 },
       // * Importante: Cuanto mide cada `frame`
     );
+    this.load.spritesheet('greendiamond',
+      './assets/images/green_diamond-sprites.png',
+      { frameWidth: 48, frameHeight: 48 },
+      // * Importante: Cuanto mide cada `frame`
+    );
 
     /* -*-*-*-*-*-*-*-*-*-*-*-*
     >> >>>>>GameOverScene<<<<<<

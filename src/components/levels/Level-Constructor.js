@@ -1,6 +1,9 @@
-import { Level01 } from './Level01';
-import { Level02 } from './Level02';
-import { Level03 } from './Level03';
+import { Level01 } from './Level01.js';
+import { Level02 } from './Level02.js';
+import { Level03 } from './Level03.js';
+import { Level04 } from './Level04.js';
+import { Level05 } from './Level05.js';
+import { Level06 } from './Level06.js';
 
 export class LevelConstructor {
   constructor (game) {
@@ -8,6 +11,9 @@ export class LevelConstructor {
     /* Importo los niveles q voy a implementar
     se ejecutan de abajo hacia arriba */
     this.levels = [
+      Level06,
+      Level05,
+      Level04,
       Level03,
       Level02,
       Level01,
