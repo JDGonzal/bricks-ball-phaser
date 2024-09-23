@@ -3160,3 +3160,211 @@ export class LevelConstructor {
 ...
 }
 ``` 
+
+## 22. Componente `Platform` en **Platform.js**
+
+1. En la carpeta "src/components", creamos el archivo 
+**Platform.js** y pasamos elementos de **GameScene.js**, ye 
+empezamos el archivo con algunso `import`, el `export`de la clase
+y los métodos `constructor` y `create`:
+```js
+import assetsJson from '../assets.json'; // assert { type: 'json' };
+
+export class Platform {
+  constructor (game) {
+    this.game = game;
+  }
+
+  create () {}
+}
+```
+2. En el archivo **GameScene.js**, importamos la nueva clase
+`Platform` y en el método `ini` instanciamos esta clase:
+```js
+import { Platform } from '../components/Platform.js';
+...
+export class GameScene extends Phaser.Scene {
+...
+  init () {
+    ...
+    this.platform = new Platform(this);    
+  }  
+}
+```
+3. Muevo de **GameScene.js** a **Platform.js** las cinco constantes
+que tiene la plabra `PLATFORM_*`.
+4. Muevo de **GameScene.js** a **Platform.js**, la creación de la 
+`platform` en pantalla en el método `create`.
+5. En el archivo **GameScene.js** de donde quitamos la creación
+de la `platform` invocamos el `create` del nuevo `platform`, debajo
+de `this.ball.setCollideWorldBounds(true)`:
+```js
+    this.platform.create();
+```
+6. La colisión entre la `ball` y la `platform` de **GameScene.js**
+la cambiamos así:
+```js
+    this.physics.add.collider(this.ball, this.platform.platform,
+      this.platformImpact, null, this);
+```
+7. Muevo el método `setInitialPlatformState` de **GameScene.js** a 
+**Platform.js** y le añado el párametro de la `ball`:
+```js
+  setInitialState (ball) {
+    ball.glue = true;
+    this.platform.setVelocity(0, 0)
+      .setPosition(400, 450)
+      .setOrigin(0.5, 0);
+    ball.setVelocity(0, 0)
+      .setPosition(400, 449)
+      .setOrigin(0.5, 1);
+  }
+```
+8. En el archivo **GameScene.js** busco donde está el llamado al 
+método `this.setInitialPlatformState()` y lo cambio por
+`this.platform.setInitialState(this.ball)`.
+9. Muevo los tres métodos **GameScene.js** a **Platform.js**, que
+son estos: `setPlatformTexture`, `setPlatformBig` y 
+`setPlatformInitial`:
+```js
+  setPlatformTexture (texture, size = PLATFORM_SIZE_NORMAL) {
+    const { width, height } = size;
+    const scale = PLATFORM_SCALE;
+    this.physics.world.pause();
+    this.anims.pauseAll();
+    this.platform.setTexture(texture);
+    this.platform.setDisplaySize(width * scale, height * scale);
+    this.platform.body.setSize(width, height);
+    this.physics.world.resume();
+    this.anims.resumeAll();
+  }
+
+  setPlatformBig () {
+    this.setPlatformTexture(PLATFORM_TEXTURE_BIG,
+      PLATFORM_SIZE_BIG);
+    this.gluePower = false;
+  }
+
+  setPlatformInitial () {
+    this.setPlatformTexture(PLATFORM_TEXTURE_NORMAL);
+  }
+```
+10. En el archivo **GameScene.js** en donde hago el llamado al
+método `this.setPlatformInitial()`, lo cambio por
+`this.platform.setPlatformInitial()`.
+11. De **GameScene.js** muevo a **Platform.js** el 
+`this.platform.setImmovable()` y lo ponemos al moento de crear
+la `platform`:
+```js
+    this.platform =
+        this.game.physics.add.image(400, 450,
+          PLATFORM_TEXTURE_NORMAL)
+          .setOrigin(0.5, 0) // x=la mitad y=Top
+          .setScale(PLATFORM_SCALE) // La escala en pantalla
+          .setImmovable(); // La plata forma la hacemos inmovible
+    // Como la plataforma cae le decimos q no va a tener gravedad
+```
+12. Movemos del método `update` de **GameScene.js**, lo relacionado
+con el `cursor.left` y el `cursor.right` a **Platform.js**, en un
+nuevo método de nombre `updatePosition` con dos parámetros que son
+la `ball` y los `cursors`:
+```js
+  updatePosition (ball, cursors) {
+    // Definimos q hace cada tecla
+    if (cursors.left.isDown) {
+      this.platform.setVelocityX(-500);
+    } else if (cursors.right.isDown) {
+      this.platform.setVelocityX(500);
+    } else {
+      this.platform.setVelocityX(0);
+    }
+    /* Asociamos la velocidad de la `ball` a la `platform`
+    cuando la `ball` esté muy cerquita de la `platform` */
+    if (ball.glue || this.game.isGlued) {
+      ball.setVelocityX(this.platform.body.velocity.x);
+    }
+  }
+```
+13. En el archivo **GameScene.js** invocamos el método
+`updatePosition` al principio del `update`:
+```js
+    this.platform.updatePosition(this.ball, this.cursor);
+```
+14. el `gluePower` se va a manejar en **Platform.js**, definiendo
+en el `constructor` dos nuevas variables:
+```js
+    this.gluePower = false;
+    this.hasBallGlued = false;
+```
+15. Cambiamos en la condición `if (ball.glue || this.game.isGlued)`
+por `` en **Platform.js**:
+```js
+    if (ball.glue || this.hasBallGlued) {
+      ball.setVelocityX(this.platform.body.velocity.x);
+    }
+```
+16. En el archivo **Platform.js** entre el `create` y el 
+`updatePosition` se añade un método para devolver el valor
+de `gluePower`:
+```js
+  hasGluePower () {
+    return this.gluePower;
+  }
+```
+17. En el archivo **GameScene.js** en el método `update` donde 
+validamos el `cursor.space`, realizamos este cambio:
+```js
+    if (this.cursor.space.isDown || this.cursor.up.isDown) {
+      if (this.ball.glue) {
+      ...
+      } else if (this.platform.hasGluePower() &&
+        this.platform.hasBallGlued) {
+        this.platform.hasBallGlued = false;
+        this.ball.setVelocity(this.glueRecordVelocityX, -300);
+      }
+```
+18. En el archivo **GameScene.js** en el método `platformImpact`
+hacemos cambios donde esta el `gluePower` por el llamado al 
+método de la clase `Platform`:
+```js
+    if (this.platform.hasGluePower()) {
+      ball.setVelocityY(0);
+      ball.setVelocityX(0);
+      // Guardamos la velocidad antes de lanzarla
+      this.glueRecordVelocityX =
+        this.calculateVelocity(relativeImpact);
+      this.platform.hasBallGlued = true;
+    } else {
+      ball.setVelocityX(this.calculateVelocity(relativeImpact));
+    }
+```
+19. Borramos de **GameScene.js**, en el `constructor` los dos
+elementos :`gluePower` y `isGlued`.
+20. En el método `setGluePower` de **GameScene.js**, hacemos
+este cambio:
+```js
+  setGluePower () {
+    this.platform.setGluePower();
+  }
+```
+21. Añadimos dos método en **Platform.js**:
+```js
+  removeGlue () {
+    this.gluePower = false;
+  }
+
+  setGluePower () {
+    this.setPlatformInitial();
+    this.gluePower = true;
+  }
+```
+22. En el archivo **GameScene.js**, en el método `update`, cuando 
+valido `if (this.ball.y >= 500 + ...`, cambio el 
+`this.gluePower = false;` por `this.platform.removeGlue();`.
+23. En el archivo **GameScene.js**, volvemos a agregar el método
+`setPlatformBig`, que llamará el método de la clase `Platform`:
+```js
+  setPlatformBig () {
+    this.platform.setPlatformBig();
+  }
+```
