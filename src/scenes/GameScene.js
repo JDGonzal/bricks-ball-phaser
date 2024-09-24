@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import assetsJson from '../assets.json'; // assert { type: 'json' };
+
 import { Scoreboard } from '../components/Scoreboard.js';
 
 import { LiveCounter } from '../components/LiveCounter.js';
 import { LevelConstructor } from '../components/levels/Level-Constructor.js';
 import { Platform } from '../components/Platform.js';
+import { Ball } from '../components/Ball.js';
 
 const INITIAL_VELOCITY_X = -60;
 const INITIAL_LIVES = 10;
@@ -32,6 +33,8 @@ export class GameScene extends Phaser.Scene {
     this.levelConstructor = new LevelConstructor(this);
     // Instancio el `Platform`
     this.platform = new Platform(this);
+    // Instancio de `Ball`
+    this.ball = new Ball(this);
     // instancio el `Scoreboard`
     this.scoreboard = new Scoreboard(this);
     // instancio el `LiveCounter`
@@ -62,43 +65,29 @@ export class GameScene extends Phaser.Scene {
     // Invocamos el `create` del componente `LiveCounter`
     this.liveCounter.create();
 
-    // Ponemos la `ball` con las `physics`
-    this.ball =
-      this.physics.add.image(400, 449, 'ball')
-        .setOrigin(0.5, 1)
-        .setScale(assetsJson.symbols.scale);
+    // Invocamos el `create` del componente `Ball`
+    this.ball.create();
     // Añado a `ball` el valor de `glue`
-    this.ball.glue = true;
-    /* Luego de crearla le decimos que se adapte a los límites
-     del `world` */
-    this.ball.setCollideWorldBounds(true);
+    // this.ball.isGlued = true;
 
     // Invocamos el `create` del componente `Platform`
     this.platform.create();
-
-    // La velocidad(x,y) de la `ball` será aleatoria
-    // let velocity = 100 * Phaser.Math.Between(1.3, 2);
-    // if (Phaser.Math.Between(0, 10) > 5) {
-    //   velocity = 0 - velocity;
-    // }
-    // this.ball.setVelocity(velocity, 10);
 
     // Invoco el create del constructor de niveles
     this.levelConstructor.create();
 
     // Colisión entre la `platform` y la `ball`
-    this.physics.add.collider(this.ball, this.platform.platform,
+    this.physics.add.collider(
+      this.ball.get(),
+      this.platform.get(),
       /* Comportamiento, Callback, Contexto */
       this.platformImpact, null, this);
     // this.platformImpact.bind(this), null); // otra forma
 
-    // Colisión entre la `ball` y el grupo de `bricks`
-    this.physics.add.collider(this.ball, this.bricks,
-      /* Comportamiento, Callback, Contexto */
-      this.bricksImpact, null, this);
-
-    // Hacemos un rebote de la `ball`
-    this.ball.setBounce(1);
+    // Esto sobra ya q es de **LevelBase.js**
+    // this.physics.add.collider(this.ball.get(), this.bricks,
+    //   /* Comportamiento, Callback, Contexto */
+    //   this.bricksImpact, null, this);
 
     // Creamos el manejo de teclado para mover la `platform`
     this.cursor = this.input.keyboard.createCursorKeys();
@@ -111,9 +100,9 @@ export class GameScene extends Phaser.Scene {
   la `ball` y la `platform` */
   platformImpact (ball, platform) {
     // Si esta en estado `glue` simplemente se sale
-    if (this.ball.glue) return;
+    if (ball.isGlued) return;
     // Llamo la función de **Scoreboard.js**
-    if (this.ball.body.velocity.y > 0) {
+    if (ball.body.velocity.y > 0) {
       this.scoreboard.addPoints(1);
     }
     // Pongo el sonido y doy play
@@ -130,7 +119,8 @@ export class GameScene extends Phaser.Scene {
         this.calculateVelocity(relativeImpact);
       this.platform.hasBallGlued = true;
     } else {
-      ball.setVelocityX(this.calculateVelocity(relativeImpact));
+      ball.setVelocityX(
+        this.calculateVelocity(relativeImpact));
     }
   }
 
@@ -174,19 +164,21 @@ export class GameScene extends Phaser.Scene {
 
     /* Salta la `ball` si está en contacto con la `platform` */
     if (this.cursor.space.isDown || this.cursor.up.isDown) {
-      if (this.ball.glue) {
-        this.ball.setVelocity(Phaser.Math.Between(-20, 20), -300);
-        this.ball.glue = false;
+      if (this.ball.isGlued) {
+        this.ball.get().setVelocity(Phaser.Math.Between(-20, 20), -300);
+        this.ball.isGlued = false;
       } else if (this.platform.hasGluePower() &&
         this.platform.hasBallGlued) {
         this.platform.hasBallGlued = false;
-        this.ball.setVelocity(this.glueRecordVelocityX, -300);
+        this.ball.get().setVelocity(this.glueRecordVelocityX, -300);
+      } else if (this.platform.isGluedBecausePower()) {
+        this.ball.throw(this.glueRecordVelocityX);
+        this.platform.hasBallGlued = false;
       }
     }
 
     // Si la `ball` se sale del juego se da por terminado el juego
-    if (this.ball.y >= 500 + this.ball.body.height &&
-      !this.ball.glue) {
+    if (this.ball.isLost()) {
       const gameNotFinished = this.liveCounter.liveLost();
       if (gameNotFinished) {
         this.platform.setInitialState(this.ball);

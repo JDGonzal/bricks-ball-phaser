@@ -39,17 +39,17 @@ export class Platform {
     }
     /* Asociamos la velocidad de la `ball` a la `platform`
     cuando la `ball` esté muy cerquita de la `platform` */
-    if (ball.glue || this.hasBallGlued) {
-      ball.setVelocityX(this.platform.body.velocity.x);
+    if (ball.isGlued || this.hasBallGlued) {
+      ball.get().setVelocityX(this.platform.body.velocity.x);
     }
   }
 
   setInitialState (ball) {
-    ball.glue = true;
+    ball.isGlued = true;
     this.platform.setVelocity(0, 0)
       .setPosition(400, 450)
       .setOrigin(0.5, 0);
-    ball.setVelocity(0, 0)
+    ball.get().setVelocity(0, 0)
       .setPosition(400, 449)
       .setOrigin(0.5, 1);
   }
@@ -83,5 +83,13 @@ export class Platform {
   setGluePower () {
     this.setPlatformInitial();
     this.gluePower = true;
+  }
+
+  get () {
+    return this.platform;
+  }
+
+  isGluedBecausePower () {
+    return (this.hasGluePower() && this.hasBallGlued);
   }
 }
