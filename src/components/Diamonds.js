@@ -3,7 +3,8 @@ export class Diamonds {
   constructor (game) {
     this.game = game;
     this.diamonds = this.game.physics.add.group();
-    this.game.physics.add.collider(this.game.ball, this.diamonds,
+    this.game.physics.add.collider(this.game.ball.get(),
+      this.diamonds,
       this.ballImpact, null, this);
   }
 

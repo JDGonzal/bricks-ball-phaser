@@ -3164,8 +3164,8 @@ export class LevelConstructor {
 ## 22. Componente `Platform` en **Platform.js**
 
 1. En la carpeta "src/components", creamos el archivo 
-**Platform.js** y pasamos elementos de **GameScene.js**, ye 
-empezamos el archivo con algunso `import`, el `export`de la clase
+**Platform.js** y pasaremos elementos de **GameScene.js**, ya 
+empezamos el archivo con algunos `import`, el `export` de la clase
 y los métodos `constructor` y `create`:
 ```js
 import assetsJson from '../assets.json'; // assert { type: 'json' };
@@ -3192,7 +3192,7 @@ export class GameScene extends Phaser.Scene {
 }
 ```
 3. Muevo de **GameScene.js** a **Platform.js** las cinco constantes
-que tiene la plabra `PLATFORM_*`.
+que tiene la palabra `PLATFORM_*`.
 4. Muevo de **GameScene.js** a **Platform.js**, la creación de la 
 `platform` en pantalla en el método `create`.
 5. En el archivo **GameScene.js** de donde quitamos la creación
@@ -3253,7 +3253,7 @@ son estos: `setPlatformTexture`, `setPlatformBig` y
 método `this.setPlatformInitial()`, lo cambio por
 `this.platform.setPlatformInitial()`.
 11. De **GameScene.js** muevo a **Platform.js** el 
-`this.platform.setImmovable()` y lo ponemos al moento de crear
+`this.platform.setImmovable()` y lo ponemos al momento de crear
 la `platform`:
 ```js
     this.platform =
@@ -3290,14 +3290,14 @@ la `ball` y los `cursors`:
 ```js
     this.platform.updatePosition(this.ball, this.cursor);
 ```
-14. el `gluePower` se va a manejar en **Platform.js**, definiendo
+14. El `gluePower` se va a manejar en **Platform.js**, definiendo
 en el `constructor` dos nuevas variables:
 ```js
     this.gluePower = false;
     this.hasBallGlued = false;
 ```
 15. Cambiamos en la condición `if (ball.glue || this.game.isGlued)`
-por `` en **Platform.js**:
+en **Platform.js**:
 ```js
     if (ball.glue || this.hasBallGlued) {
       ball.setVelocityX(this.platform.body.velocity.x);
@@ -3324,7 +3324,7 @@ validamos el `cursor.space`, realizamos este cambio:
       }
 ```
 18. En el archivo **GameScene.js** en el método `platformImpact`
-hacemos cambios donde esta el `gluePower` por el llamado al 
+hacemos cambios donde está el `gluePower` por el llamado al 
 método de la clase `Platform`:
 ```js
     if (this.platform.hasGluePower()) {
@@ -3367,4 +3367,135 @@ valido `if (this.ball.y >= 500 + ...`, cambio el
   setPlatformBig () {
     this.platform.setPlatformBig();
   }
+```
+
+## 23. Componente `ball` en **Ball.js**
+
+1. En la carpeta "src/components", creamos el archivo 
+**Ball.js** y pasaremos elementos de **GameScene.js**, ya 
+empezamos el archivo con algunos `import`, el `export` de la clase
+y los métodos `constructor` y `create`:
+```js
+import assetsJson from '../assets.json'; // assert { type: 'json' };
+
+export class Ball {
+  constructor (game) {
+    this.game = game;
+  }
+
+  create () {}
+}
+```
+2. Añado al `constructor` de **Ball.js**, para controlar si se pega
+o no con el nombre `isGlued`:
+```js
+    this.isGlued = true;
+```
+3. En el archivo **GameScene.js**, importamos la nueva clase
+`Ball` y en el método `ini` instanciamos esta clase:
+```js
+import { Ball } from '../components/Ball.js';
+...
+export class GameScene extends Phaser.Scene {
+...
+  init () {
+    ...
+    this.ball = new Ball(this);    
+  }  
+}
+```
+4. Muevo de **GameScene.js** a **Platform.js**, la creación de la 
+`ball` en pantalla en el método `create`:
+```js
+    // Ponemos la `ball` con las `physics`
+    this.ball =
+      this.physics.add.image(400, 449, 'ball')
+        .setOrigin(0.5, 1)
+        .setScale(assetsJson.symbols.scale);
+```
+5. Donde estaba la creación de la `ball` en pantalla, ponemos este:
+```js
+    this.ball.create();
+```
+6. Muevo de **GameScene.js** a **Platform.js** los dos relacionados
+con `ball` de nombres: `setBounce` y `setCollideWorldBounds`, el
+`create` queda así:
+```js
+  create () {
+    // Ponemos la `ball` con las `physics`
+    this.ball =
+        this.game.physics.add.image(400, 449, 'ball')
+          .setOrigin(0.5, 1)
+          .setScale(assetsJson.symbols.scale);
+    // Hacemos un rebote de la `ball`
+    this.ball.setBounce(1);
+    /* Luego de crearla le decimos que se adapte a los límites
+     del `world` */
+    this.ball.setCollideWorldBounds(true);
+  }
+```
+7. En **GameScene.js** ya no se requiere la importación de 
+`assetsJson`, entonces se elimina esa línea.
+8. En el archivo **Ball.js**, añado tres métodos:
+```js
+  isLost () {
+    return (this.ball.y >= 500 + this.ball.body.height &&
+      !this.ball.isGlue && this.ball.active);
+  }
+
+  get () {
+    return this.ball;
+  }
+
+  throw (velocity) {
+    this.ball.setVelocity(velocity, -300);
+    this.isGlued = false;
+  }
+```
+9. En el archivo **GameScene.js** en el método `update`, cuando
+evaluamos la condición `if (this.ball.y >= 500 +`, lo cambiamos todo 
+por `this.ball.isLost()`.
+10. En el archivo **Platformjs**, hacemos estos cambios en donde
+esta lo relacionado con `ball`, empezando por cambiar todo lo 
+que dice `ball.glue` por `ball.isGlued`
+11. En el archivo **Platformjs** otro cambio de `ball` donde está
+`ball.setVelocityX` por `ball.get().setVelocityX`, lo mismo para 
+`ball.setVelocity` por `ball.get().setVelocity`.
+12. Añado a **Platform.js**, dos métodos mas:
+```js
+  get () {
+    return this.platform;
+  }
+
+  isGluedBecausePower () {
+    return (this.hasGluePower() && this.hasBallGlued);
+  }
+```
+13. En el archivo **GameScene.js**, en la colisión entre la
+`ball` y la `platform`, hago estos cambios:
+```js
+    this.physics.add.collider(
+      this.ball.get(),
+      this.platform.get(),
+      this.platformImpact, null, this);
+```
+14. En **GameScene.js**, cambio todo lo que dice `ball.glue` por
+`ball.isGlued`.
+15. En **GameScene.js**, cambio todo lo que dice `ball.setVelocity` 
+por `ball.get().setVelocity`.
+16. Esta colisión en **GameScene.js**, debe borrarse, ya esto
+está configurado en **LevelBase.js**:
+```diff
+-    this.physics.add.collider(this.ball.get(), this.bricks,
+-      this.bricksImpact, null, this);
+```
+17. En **LevelBase.js**, añadir a la `ball` el `.get()`.
+18. En **Diamonds.js**, añadir a la `ball` el `.get()`.
+19. En el archivo **GameScene.js** en la condición de 
+`if (this.cursor.space.isDown...` añado esto:
+```js
+        else if (this.platform.isGluedBecausePower()) {
+        this.ball.throw(this.glueRecordVelocityX);
+        this.platform.hasBallGlued = false;
+      }
 ```

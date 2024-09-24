@@ -7,13 +7,13 @@ export class LevelBase {
 
   /* Será llamado de cada nivel a ser utilizado */
   configureColisions () {
-    this.game.physics.add.collider(this.game.ball, this.bricks,
+    this.game.physics.add.collider(this.game.ball.get(), this.bricks,
       this.brickImpact, null, this);
   }
 
   /* Para los ladrillo irrompibles */
   configureColisionsUnbreakable () {
-    this.game.physics.add.collider(this.game.ball,
+    this.game.physics.add.collider(this.game.ball.get(),
       this.unbreakableBricks, this.game.unbreakableBricksImpact,
       null, this.game);
   }
