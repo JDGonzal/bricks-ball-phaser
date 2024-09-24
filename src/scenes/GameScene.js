@@ -245,4 +245,8 @@ export class GameScene extends Phaser.Scene {
   setPlatformBig () {
     this.platform.setPlatformBig();
   }
+
+  removeGlueFromBall () {
+    this.ball.removeGlue();
+  }
 };

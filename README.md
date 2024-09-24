@@ -3499,3 +3499,22 @@ está configurado en **LevelBase.js**:
         this.platform.hasBallGlued = false;
       }
 ```
+
+## 24. Ajustes del manejo de `glue`.
+
+1. En el Archivo **Ball.js**, ponemos un nuevo método de 
+nombre `removeGlue`:
+```js
+  removeGlue () {
+    this.isGlued = false;
+  }
+```
+2. En el Archivo **GameScene.js**, añado un método de nombre 
+`removeGlueFromBall`:
+```js
+  removeGlueFromBall () {
+    this.ball.removeGlue();
+  }
+```
+3. En el archivo **Diamonds.js**, cambiar `ball.glue = false;` por
+`this.game.removeGlueFromBall();`
