@@ -32,4 +32,8 @@ export class Ball {
     this.ball.setVelocity(velocity, -300);
     this.isGluedd = false;
   }
+
+  removeGlue () {
+    this.isGlued = false;
+  }
 }

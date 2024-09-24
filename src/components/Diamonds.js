@@ -30,8 +30,8 @@ export class Diamonds {
     diamond.destroy();
     // damos el poder q se relacione
     diamond.relatedPower.givePower();
-    // Evitamos que se pegue
-    ball.glue = false;
+    // Evitamos que se pegue poroviene de **GameScene.js**
+    this.game.removeGlueFromBall();
     /* Para evitar que la `ball` se frene con el impacto,
     la `ball` tenga siempre una velocidad vertical de 300 */
     const currentVelocity = ball.body.velocity;
