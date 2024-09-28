@@ -6,6 +6,9 @@ export class Diamonds {
     this.game.physics.add.collider(this.game.ball.get(),
       this.diamonds,
       this.ballImpact, null, this);
+    this.game.physics.add.collider(this.game.platform.get(),
+      this.diamonds,
+      this.platformImpact, null, this);
   }
 
   // Recibimos cuatro parámetros
@@ -30,15 +33,25 @@ export class Diamonds {
     diamond.destroy();
     // damos el poder q se relacione
     diamond.relatedPower.givePower();
-    // Evitamos que se pegue poroviene de **GameScene.js**
-    this.game.removeGlueFromBall();
     /* Para evitar que la `ball` se frene con el impacto,
     la `ball` tenga siempre una velocidad vertical de 300 */
     const currentVelocity = ball.body.velocity;
-    if (currentVelocity.y > 0) {
+    if (currentVelocity.y > 0 && !this.game.ball.isGlued) {
       ball.body.setVelocityY(300);
     } else {
       ball.body.setVelocityY(-300);
+    }
+    // Evitamos que se pegue, proviene de **GameScene.js**
+    this.game.removeGlueFromBall();
+  }
+
+  platformImpact (platform, diamond) {
+    // Destruimos el diamante
+    diamond.destroy();
+    // damos el poder q se relacione
+    diamond.relatedPower.givePower();
+    if (this.game.ball.get().isGlued) {
+      this.game.ball.get().body.setVelocityY(-300);
     }
   }
 }

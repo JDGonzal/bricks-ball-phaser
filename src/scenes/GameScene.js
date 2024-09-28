@@ -67,8 +67,6 @@ export class GameScene extends Phaser.Scene {
 
     // Invocamos el `create` del componente `Ball`
     this.ball.create();
-    // Añado a `ball` el valor de `glue`
-    // this.ball.isGlued = true;
 
     // Invocamos el `create` del componente `Platform`
     this.platform.create();
@@ -100,7 +98,7 @@ export class GameScene extends Phaser.Scene {
   la `ball` y la `platform` */
   platformImpact (ball, platform) {
     // Si esta en estado `glue` simplemente se sale
-    if (ball.isGlued) return;
+    if (this.ball.isGlued || ball.body.velocity.y === 0) return;
     // Llamo la función de **Scoreboard.js**
     if (ball.body.velocity.y > 0) {
       this.scoreboard.addPoints(1);

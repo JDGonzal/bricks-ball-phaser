@@ -3518,3 +3518,42 @@ nombre `removeGlue`:
 ```
 3. En el archivo **Diamonds.js**, cambiar `ball.glue = false;` por
 `this.game.removeGlueFromBall();`
+
+## 25. Que la `platform` colisione con los `diamonds`
+Este paso no está en el manual, pero espero que la `platform`
+obtenga los poderes directamente cuando colisione con los
+`diamonds`. El único cambio es en **Diamonds.js**:
+1. Añado el método `platformImpact`:
+```js
+  platformImpact (platform, diamond) {
+    // Destruimos el diamante
+    diamond.destroy();
+    // damos el poder q se relacione
+    diamond.relatedPower.givePower();
+    if (this.game.ball.get().isGlued) {
+      this.game.ball.get().body.setVelocityY(-300);
+    }
+  }
+```
+2. En el `constructor`, uso ese método en un `physics`:
+```js
+    this.game.physics.add.collider(this.game.platform.get(),
+      this.diamonds,
+      this.platformImpact, null, this);
+```
+
+>[!TIP]  
+>Un plus en el archivo **Diamonds.js** en el método `ballImpact`
+>esta condición `if (currentVelocity.y > 0` se añade otra mas:
+>```js
+>    if (currentVelocity.y > 0 && !this.game.ball.isGlued) {
+>      ball.body.setVelocityY(300);
+>    } else {
+>      ball.body.setVelocityY(-300);
+>    }
+>```
+
+>[!WARNING]  
+>Corrijo un error en **GameScene.js** en el método `platformImpact`
+>la condición inicial para hacer el `return`, sería así:  
+>`if (this.ball.isGlued || ball.body.velocity.y === 0) return;`
