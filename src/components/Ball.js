@@ -30,7 +30,7 @@ export class Ball {
 
   throw (velocity) {
     this.ball.setVelocity(velocity, -300);
-    this.isGluedd = false;
+    this.isGlued = false;
   }
 
   removeGlue () {
