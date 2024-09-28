@@ -3520,6 +3520,7 @@ nombre `removeGlue`:
 `this.game.removeGlueFromBall();`
 
 ## 25. Que la `platform` colisione con los `diamonds`
+
 Este paso no está en el manual, pero espero que la `platform`
 obtenga los poderes directamente cuando colisione con los
 `diamonds`. El único cambio es en **Diamonds.js**:
