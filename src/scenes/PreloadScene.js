@@ -11,6 +11,11 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   preload () {
+    /* -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+    >> >>>>Virtual Joystick Plugin<<<
+    -* -*-*-*-*-*-*-*-*-*-*-*-*-*-*-* */
+    const url = 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js';
+    this.load.plugin('rexvirtualjoystickplugin', url, true);
     /* -*-*-*-*-*-*-*-*-*-*-*
     >> >>>>PreloadScene<<<<<
     -* -*-*-*-*-*-*-*-*-*-*-* */

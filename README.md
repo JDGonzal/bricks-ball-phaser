@@ -3558,3 +3558,81 @@ obtenga los poderes directamente cuando colisione con los
 >Corrijo un error en **GameScene.js** en el método `platformImpact`
 >la condición inicial para hacer el `return`, sería así:  
 >`if (this.ball.isGlued || ball.body.velocity.y === 0) return;`
+
+
+## 26. Virtual Joystick para Phaser
+>[!TIP]  
+>Hice un cambio en **package.json**, para añadir una opción mas de
+>ejecución, que bauticé como `"net"` y permite que la ejecución sea 
+>vista dentro de la red local de la casa:  
+>### Añadido en **package.json**:
+>```json
+>    "net": "vite ./src --host",
+>```
+>### Comando a ejecutar en la `TERMINAL`:
+>```bash
+>pnpm net
+>```
+
+1. Precargar el plugin en el `preload` de **PrealoadScene.js**:
+```js
+    const url = 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js';
+    this.load.plugin('rexvirtualjoystickplugin', url, true);
+```
+2. Adicionar en el `constructor` y en el `create` de 
+**GameScene.js**, el uso del `joyStick` con los respectivos 
+parámetros:
+```js
+    // Activación del `joyStick` con los parámetros
+    this.joyStick =
+      this.plugins.get('rexvirtualjoystickplugin').add(this, {
+        x: 55,
+        y: 400,
+        radius: 100,
+        base: this.add.circle(0, 0, 50, 0x888888),
+        thumb: this.add.circle(0, 0, 25, 0xcccccc),
+      // dir: '8dir',   
+      // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+      // forceMin: 16,
+      // enable: true
+      });
+    // El manejo del teclado pero en un `joyStick`
+    this.joystickCursors = this.joyStick.createCursorKeys();
+```
+3. Cambiamos donde diga `cursor` por `cursors` en plural.
+4. Donde este el uso del `cursors...isDown`  añadimos el del 
+`joystickCursors` en **GameScene.js**:
+```js
+    if (this.cursors.space.isDown ||
+      this.cursors.up.isDown ||
+      this.joystickCursors.up.isDown) {
+      if (this.ball.isGlued) {
+        ...
+      }
+    }
+```
+5. En el archivo **Platform.js**, el método `updatePosition`, 
+ponemos un nuevo párametro y le activamos el respectivo uso:
+```js
+  updatePosition (ball, cursors, joystickCursors) {
+    // Definimos q hace cada tecla
+    if (cursors.left.isDown || joystickCursors.left.isDown) {
+      this.platform.setVelocityX(-500);
+    } else if (cursors.right.isDown || joystickCursors.right.isDown) {
+      this.platform.setVelocityX(500);
+    } else {
+      this.platform.setVelocityX(0);
+    }
+    /* Asociamos la velocidad de la `ball` a la `platform`
+    cuando la `ball` esté muy cerquita de la `platform` */
+    if (ball.isGlued || this.hasBallGlued) {
+      ball.get().setVelocityX(this.platform.body.velocity.x);
+    }
+  }
+```
+6. El llamado del método `updatePosition` en **GameScene.js**, 
+añadidimos el parámetro de `joystickCursors`:
+```js
+    this.platform.updatePosition(this.ball, this.cursors,
+      this.joystickCursors);
+```

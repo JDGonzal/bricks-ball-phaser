@@ -28,11 +28,11 @@ export class Platform {
     return this.gluePower;
   }
 
-  updatePosition (ball, cursors) {
+  updatePosition (ball, cursors, joystickCursors) {
     // Definimos q hace cada tecla
-    if (cursors.left.isDown) {
+    if (cursors.left.isDown || joystickCursors.left.isDown) {
       this.platform.setVelocityX(-500);
-    } else if (cursors.right.isDown) {
+    } else if (cursors.right.isDown || joystickCursors.right.isDown) {
       this.platform.setVelocityX(500);
     } else {
       this.platform.setVelocityX(0);
