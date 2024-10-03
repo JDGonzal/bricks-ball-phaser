@@ -17,7 +17,7 @@ export class GameScene extends Phaser.Scene {
 
     this.background = null;
     this.platform = null;
-    this.cursor = null;
+    this.cursors = null;
     this.ball = null;
     this.scoreboard = null;
     this.bricks = null;
@@ -25,6 +25,8 @@ export class GameScene extends Phaser.Scene {
     this.levelConstructor = null;
     this.diamondBlue = null;
     this.glueRecordVelocityX = INITIAL_VELOCITY_X;
+    this.joyStick = null;
+    this.joystickCursors = null;
   }
 
   /* Valores que puedo inicializar */
@@ -88,10 +90,26 @@ export class GameScene extends Phaser.Scene {
     //   this.bricksImpact, null, this);
 
     // Creamos el manejo de teclado para mover la `platform`
-    this.cursor = this.input.keyboard.createCursorKeys();
+    this.cursors = this.input.keyboard.createCursorKeys();
 
     // Llamo el método para ver las animaciones de los `diamonds`
     this.createAnimations();
+
+    // Activación del `joyStick` con los parámetros
+    this.joyStick =
+      this.plugins.get('rexvirtualjoystickplugin').add(this, {
+        x: 55,
+        y: 400,
+        radius: 100,
+        base: this.add.circle(0, 0, 50, 0x888888),
+        thumb: this.add.circle(0, 0, 25, 0xcccccc),
+      // dir: '8dir',
+      // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+      // forceMin: 16,
+      // enable: true
+      });
+    // El manejo del teclado pero en un `joyStick`
+    this.joystickCursors = this.joyStick.createCursorKeys();
   }
 
   /* Método para cuando se hace la colisión entre
@@ -158,10 +176,13 @@ export class GameScene extends Phaser.Scene {
   update () {
     /* El proceso corre cada segundo */
     // Llamada al método con el control de las teclas y bola
-    this.platform.updatePosition(this.ball, this.cursor);
+    this.platform.updatePosition(this.ball, this.cursors,
+      this.joystickCursors);
 
     /* Salta la `ball` si está en contacto con la `platform` */
-    if (this.cursor.space.isDown || this.cursor.up.isDown) {
+    if (this.cursors.space.isDown ||
+      this.cursors.up.isDown ||
+      this.joystickCursors.up.isDown) {
       if (this.ball.isGlued) {
         this.ball.get().setVelocity(Phaser.Math.Between(-20, 20), -300);
         this.ball.isGlued = false;
